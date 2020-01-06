@@ -1,4 +1,4 @@
-# bracket-peek
+# Bracket Peek
 
 This extensions helps you to view the line of code containing an opening curly bracket when inspecting the matching closing bracket.
 If the line of code, containing the opening bracket, is not visible in the current view port, a preview is displayed in the first line of the editor.
@@ -9,7 +9,7 @@ Works on:
 - moving carret to closing bracket
 - hovering closing bracket
 
-![](preview.gif)
+![](https://raw.githubusercontent.com/j0meinaster/bracket-peek/master/preview.gif)
 
 
 Works with any file type containing curly brackets '{ ... }'_
@@ -24,6 +24,10 @@ Works with any file type containing curly brackets '{ ... }'_
 ### 1.0.0
 
 Initial release of bracket-peek
+
+### 1.0.1
+
+Rename display name to "Bracket Peek"
 
 ## Known Issues
 

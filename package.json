@@ -1,8 +1,8 @@
 {
 	"name": "bracket-peek",
-	"displayName": "bracket-peek",
+	"displayName": "Bracket Peek",
 	"description": "Preview the opening line of code matching the inspected closing bracket",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"publisher": "jomeinaster",
 	"icon": "logo.png",
 	"keywords": [ "bracket", "closing", "opening", "peek", "preview", "highlight", "curly", "match"],
@@ -24,5 +24,9 @@
 		"@types/node": "^12.11.7",
 		"@types/vscode": "^1.40.0",
 		"eslint": "^6.6.0"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/j0meinaster/bracket-peek.git"
 	}
 }
