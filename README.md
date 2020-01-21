@@ -23,12 +23,11 @@ Works with any file type containing curly brackets '{ ... }'_
 ## Release Notes
 
 ### 1.0.0
-
 Initial release of bracket-peek
-
 ### 1.0.1
-
 Rename display name to "Bracket Peek"
+### 1.0.2
+Updated logo with icon
 
 ## Known Issues
 
