@@ -1,5 +1,5 @@
 
-# <img src="https://raw.githubusercontent.com/j0meinaster/bracket-peek/master/logo.jpg" width="128" height="128"> Bracket Peek
+# Bracket Peek
 
 This extensions helps you to view the line of code containing an opening curly bracket when inspecting the matching closing bracket.
 If the line of code, containing the opening bracket, is not visible in the current view port, a preview is displayed in the first line of the editor.
@@ -26,7 +26,7 @@ Works with any file type containing curly brackets '{ ... }'_
 Initial release of bracket-peek
 ### 1.0.1
 Rename display name to "Bracket Peek"
-### 1.0.2
+### 1.0.2 / 1.0.2
 Updated logo with icon
 
 ## Known Issues
