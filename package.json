@@ -4,7 +4,7 @@
 	"description": "Preview the opening line of code matching the inspected closing bracket",
 	"version": "1.0.1",
 	"publisher": "jomeinaster",
-	"icon": "logo.png",
+	"icon": "logo.jpg",
 	"keywords": [ "bracket", "closing", "opening", "peek", "preview", "highlight", "curly", "match"],
 	"engines": {
 		"vscode": "^1.40.0"
