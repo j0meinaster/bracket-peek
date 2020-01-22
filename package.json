@@ -17,7 +17,8 @@
 		"onLanguage:css",
 		"onLanguage:typescript",
 		"onLanguage:javascript",
-		"onLanguage:json"
+		"onLanguage:json",
+		"onLanguage:dart"
 	],
 	"main": "./extension.js",
 	"devDependencies": {
