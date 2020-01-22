@@ -19,6 +19,9 @@ Works with any file type containing curly brackets '{ ... }'_
 - Sass          *.scss
 - Css           *.css
 - JSON          *.json
+- Dart          *.dart
+
+Please note that the according language support extension needs to be installed as well.
 
 ## Release Notes
 
@@ -26,8 +29,10 @@ Works with any file type containing curly brackets '{ ... }'_
 Initial release of bracket-peek
 ### 1.0.1
 Rename display name to "Bracket Peek"
-### 1.0.2 / 1.0.2
+### 1.0.2 / 1.0.3
 Updated logo with icon
+### 1.0.4
+Support *dart files
 
 ## Known Issues
 
