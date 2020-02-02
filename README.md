@@ -20,6 +20,9 @@ Works with any file type containing curly brackets '{ ... }'_
 - Css           *.css
 - JSON          *.json
 - Dart          *.dart
+- Java          *.java
+- Php           *.php
+- C, C#, C++, Objective-C, Objective C++   *.c *cs *.cpp *.m* *.h
 
 Please note that the according language support extension needs to be installed as well.
 
@@ -32,7 +35,11 @@ Rename display name to "Bracket Peek"
 ### 1.0.2 / 1.0.3
 Updated logo with icon
 ### 1.0.4
-Support *dart files
+Support *.dart files
+### 1.0.5
+Support *.java *.php *.c *cs *.cpp *.m* *.h files
+Improve hover functionality to find closing bracket in whole hovered line 
+
 
 ## Known Issues
 

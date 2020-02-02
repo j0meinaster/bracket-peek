@@ -73,28 +73,7 @@ function activate(context) {
 			}
 			
 		} else { // Selection is carret => search for bracket in line
-			const posAfterCarret = selection.start;
-			const posBeforeCarret = new vscode.Position(posAfterCarret.line, Math.max(0, selection.start.character - 1));
-			
-			// Search bracket near carret first
-			if (editorCharAt(posAfterCarret) == '}') { // Closing bracket after carret
-				selectedClosingBracketPosition = posAfterCarret; 
-			
-			} else if (editorCharAt(posBeforeCarret) == '}') { // Closing bracket before carret
-				selectedClosingBracketPosition = posBeforeCarret; 
-		
-			} else { // Search for next (preferred) or previous bracket in line
-				const lineText = activeEditor.document.lineAt(selection.start.line).text;
-				const nextBracketIndex = lineText.substring(selection.start.character).indexOf('}');
-				const previousBracketIndex = lineText.substring(0, Math.max(selection.start.character - 1, 0)).lastIndexOf('}');
-				
-				if (nextBracketIndex != -1) {
-					selectedClosingBracketPosition = new vscode.Position(selection.start.line, selection.start.character + nextBracketIndex);
-				
-				} else if (previousBracketIndex != -1) {
-					selectedClosingBracketPosition = new vscode.Position(selection.start.line, previousBracketIndex);
-				}
-			}
+			selectedClosingBracketPosition = findClosestClosingBracketInLine(selection.start);
 		}
 
 		triggerOpeningBracketPreview();
@@ -103,15 +82,12 @@ function activate(context) {
 	
 	vscode.languages.registerHoverProvider('*', {
 		provideHover(document, position, token) {
-			const hoveredChar = editorCharAt(position);
-
 			token.onCancellationRequested(() => {
 				console.log('CANCEL');
 				triggerOpeningBracketPreview();
 			});
 
-			if (hoveredChar == '}') hoveredClosingBracketPosition = position;
-			else hoveredClosingBracketPosition = null;
+			hoveredClosingBracketPosition = findClosestClosingBracketInLine(position);
 
 			triggerOpeningBracketPreview();
 		}
@@ -145,7 +121,7 @@ function activate(context) {
 
 		if (!bracketPair) return clearDecorations(); // No match => clear
 
-		console.log(`Hovered '}' =>  ${bracketPair.openingBracketLineIndex + 1}: ${bracketPair.openingBracketLineText}`, bracketPair);
+		console.log(`Found opening =>  ${bracketPair.openingBracketLineIndex + 1}: ${bracketPair.openingBracketLineText}`, bracketPair);
 
 		// First completely visible line in editor
 		const firstVisibleLine = activeEditor.visibleRanges[0].start.line;
@@ -274,6 +250,31 @@ function activate(context) {
 			decorations = null;
 		}
 	}
+
+	function findClosestClosingBracketInLine(pos) {
+		const posBefore = new vscode.Position(pos.line, Math.max(0, pos.character - 1));
+
+		// Search bracket near carret first
+		if (editorCharAt(pos) == '}') { // Closing bracket after carret
+			return pos;
+
+		} else if (editorCharAt(posBefore) == '}') { // Closing bracket before carret
+			return posBefore;
+
+		} else { // Search for next (preferred) or previous bracket in line
+			const lineText = activeEditor.document.lineAt(pos.line).text;
+			const nextBracketIndex = lineText.substring(pos.character).indexOf('}');
+			const previousBracketIndex = lineText.substring(0, Math.max(pos.character - 1, 0)).lastIndexOf('}');
+
+			if (nextBracketIndex != -1) {
+				return new vscode.Position(pos.line, pos.character + nextBracketIndex);
+
+			} else if (previousBracketIndex != -1) {
+				return new vscode.Position(pos.line, previousBracketIndex);
+			}
+		}
+	}
+
 
 	function editorCharAt(position) {
 		if (!activeEditor) return null;
