@@ -37,7 +37,7 @@ Updated logo with icon
 ### 1.0.4
 Support *.dart files
 ### 1.0.5
-Support *.java *.php *.c *cs *.cpp *.m* *.h files
+Support *.java *.php *.c *cs *.cpp *.m *.h files
 Improve hover functionality to find closing bracket in whole hovered line 
 
 
