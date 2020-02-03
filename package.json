@@ -2,10 +2,12 @@
 	"name": "bracket-peek",
 	"displayName": "Bracket Peek",
 	"description": "Preview the opening line of code matching the inspected closing bracket",
-	"version": "1.0.5",
+	"version": "1.1.0",
 	"publisher": "jomeinaster",
 	"icon": "logo.jpg",
-	"keywords": [ "bracket", "closing", "opening", "peek", "preview", "highlight", "curly", "match"],
+	"keywords": [ "bracket", "closing", "opening", "peek", "preview", "highlight", "curly", "match", "tag", "markup",
+		"sass", "scss", "css", "styles", "typescript", "javascript", "java", "php", "c", "dart", "cs", "csharp", "cpp", 
+		"c plus plus", "c sharp", "html", "xml" ],
 	"engines": {
 		"vscode": "^1.40.0"
 	},
@@ -25,7 +27,9 @@
 		"onLanguage:cpp",
 		"onLanguage:csharp",
 		"onLanguage:objective-c",
-		"onLanguage:objective-cpp"
+		"onLanguage:objective-cpp",
+		"onLanguage:html",
+		"onLanguage:xml"
 	],
 	"main": "./extension.js",
 	"devDependencies": {

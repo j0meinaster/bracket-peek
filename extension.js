@@ -29,31 +29,30 @@ function activate(context) {
 	
 	let activeEditor = vscode.window.activeTextEditor;
 	let decorations = null;
-	
-	
-	// Cached bracket pairs in active editor
+
+	// Cached bracket / tag  pairs in active editor
 	/*
 	[{
-		openingBracketLineIndex,
-		openingBracketLineText,
-		closingBracketLineIndex,
-		closingBracketOffset
+		openingLineIndex,
+		openingLineText,
+		closingLineIndex,
+		closingOffset,
 	}]
 	*/
-	let bracketPairs = [];
+	let pairs = [];
+
+	let selectedClosingPosition = null;
+	let hoveredClosingPosition = null;
 	
-	let selectedClosingBracketPosition = null;
-	let hoveredClosingBracketPosition = null;
-	
-	let bracketPairFindTimeout;
+	let pairFindTimeout;
 	let scrollTimeout;
 
 	// Text selected or carret moved
 	vscode.window.onDidChangeTextEditorSelection(e => {
-		hoveredClosingBracketPosition = null; // Clear hover
-		selectedClosingBracketPosition = null; // Clear current selection
+		hoveredClosingPosition = null; // Clear hover
+		selectedClosingPosition = null; // Clear current selection
 
-		if (e.selections.length !== 1) return clearDecorations(); // Invalid selection for bracket preview
+		if (e.selections.length !== 1) return clearDecorations(); // Invalid selection for bracket/tag preview
 
 		const selection = e.selections[0];
 		const text = activeEditor.document.getText(selection); // Text of selection range
@@ -61,22 +60,23 @@ function activate(context) {
 		if (text.length > 0) { // Selection is range
 			const selectedLines = text.split('\n');
 
-			// Search for closing bracket in any line of selection, starting from the back
-			for (let i = selectedLines.length - 1; i >= 0 && !selectedClosingBracketPosition; i--){
+			// Search for closing bracket/tag in any line of selection, starting from the back
+			for (let i = selectedLines.length - 1; i >= 0 && !selectedClosingPosition; i--){
 				const lineText = selectedLines[i];
-				const closingBracketIndex = lineText.lastIndexOf('}');
-				if (closingBracketIndex != -1) {
-					const closingBracketLine = selection.start.line + i;
-					const closingBracketCharacter = i == 0 ? selection.start.character + closingBracketIndex : closingBracketIndex;
-					selectedClosingBracketPosition = new vscode.Position(closingBracketLine, closingBracketCharacter);
+				
+				const closingIndex = regexLastIndexOf(lineText, /}|<\//gm); // First index of '}' or '</'
+				if (closingIndex != -1) {
+					const closingLine = selection.start.line + i;
+					const closingCharacter = i == 0 ? selection.start.character + closingIndex : closingIndex;
+					selectedClosingPosition = new vscode.Position(closingLine, closingCharacter);
 				}
 			}
 			
-		} else { // Selection is carret => search for bracket in line
-			selectedClosingBracketPosition = findClosestClosingBracketInLine(selection.start);
+		} else { // Selection is carret => search for bracket/tag in line
+			selectedClosingPosition = findClosestClosingInLine(selection.start);
 		}
 
-		triggerOpeningBracketPreview();
+		triggerPreview();
 	
 	}, null, context.subscriptions);
 	
@@ -84,74 +84,115 @@ function activate(context) {
 		provideHover(document, position, token) {
 			token.onCancellationRequested(() => {
 				console.log('CANCEL');
-				triggerOpeningBracketPreview();
+				triggerPreview();
 			});
 
-			hoveredClosingBracketPosition = findClosestClosingBracketInLine(position);
+			hoveredClosingPosition = findClosestClosingInLine(position);
 
-			triggerOpeningBracketPreview();
+			triggerPreview();
 		}
 	});
+
+	function findClosestClosingInLine(pos) {
+		const posBefore = new vscode.Position(pos.line, Math.max(0, pos.character - 1));
+
+		// Search bracket near carret first
+		if (editorHasTextAt('}', pos) || editorHasTextAt('</', pos)) { // Closing bracket / tag after carret
+			return pos;
+
+		} else if (editorHasTextAt('}', posBefore) || editorHasTextAt('</', posBefore)) { // Closing bracket / tag before carret
+			return posBefore;
+
+		} else { // Search for next (preferred) or previous bracket in line
+			const lineText = activeEditor.document.lineAt(pos.line).text;
+			const nextText = lineText.substring(pos.character);
+			const previousText = lineText.substring(0, Math.max(pos.character - 1, 0));
+
+			const nextIndex = regexIndexOf(nextText, /}|<\//gm); // First index of '}' or '</'
+			const previousIndex = regexLastIndexOf(previousText, /}|<\//gm); // Last index of '}' or '</'
+
+			if (nextIndex != -1) {
+				return new vscode.Position(pos.line, pos.character + nextIndex);
+
+			} else if (previousIndex != -1) {
+				return new vscode.Position(pos.line, previousIndex);
+			}
+		}
+	}
 	
 	// Update decoration on scroll
 	vscode.window.onDidChangeTextEditorVisibleRanges(e => {
 		clearDecorations(); // Clear decoration while scrolling because decoration also scrolls
-		hoveredClosingBracketPosition = null; // Clear hover
+		hoveredClosingPosition = null; // Clear hover
 		
 		// If selection is active maybe update decoration line or hide it if scrolled in view port => use timeout to avoid flickering
 		clearTimeout(scrollTimeout);
-		scrollTimeout = setTimeout(triggerOpeningBracketPreview, 300);
+		scrollTimeout = setTimeout(triggerPreview, 300);
 
 	}, null, context.subscriptions);
 
+	// On startup
+	if (activeEditor) {
+		triggerFindPairs();
+	}
 
-	function triggerOpeningBracketPreview() {
+	// On editor change
+	vscode.window.onDidChangeActiveTextEditor(editor => {
+		activeEditor = editor;
+		if (editor) triggerFindPairs();
 
-		// Decide if hovered closing bracket or selected closing bracket preview 
-		let closingBracketPosition = hoveredClosingBracketPosition; // Hover is more important then current selection
-		if (!closingBracketPosition) closingBracketPosition = selectedClosingBracketPosition; // Show current selection
-		if (!closingBracketPosition) return clearDecorations(); // => If no closing bracket is active clear
+	}, null, context.subscriptions);
 
-		if (!bracketPairs) findBracketPairs(); // Pairs not loaded yet => Do now
-		if (!bracketPairs) return clearDecorations(); // Pairs can't be loaded right now =>  clear
+	// On text change
+	vscode.workspace.onDidChangeTextDocument(event => {
+		if (activeEditor && event.document === activeEditor.document) triggerFindPairs();
+	}, null, context.subscriptions);
 
-		// Find pair depending on position of closing bracket
-		const bracketPair = bracketPairs.find(
-			pair => pair.closingBracketLineIndex == closingBracketPosition.line && pair.closingBracketOffset == closingBracketPosition.character);
 
-		if (!bracketPair) return clearDecorations(); // No match => clear
+	function triggerPreview() {
 
-		console.log(`Found opening =>  ${bracketPair.openingBracketLineIndex + 1}: ${bracketPair.openingBracketLineText}`, bracketPair);
+		// Decide if hovered closing bracket/tag or selected closing bracket/tag preview 
+		let closingPosition = hoveredClosingPosition; // Hover is more important then current selection
+		if (!closingPosition) closingPosition = selectedClosingPosition; // Show current selection
+		if (!closingPosition) return clearDecorations(); // => If no closing bracket/tag is active clear
+
+		// Find pair depending on position of closing bracket/tag
+		const pair = pairs.find(
+			pair => pair.closingLineIndex == closingPosition.line && pair.closingOffset == closingPosition.character);
+
+		if (!pair) return clearDecorations(); // No match => clear
+
+		console.log(`Found opening =>  ${pair.openingLineText + 1}: ${pair.openingLineText}`, pair);
 
 		// First completely visible line in editor
 		const firstVisibleLine = activeEditor.visibleRanges[0].start.line;
 
-		// If opening bracket is already visible no need to show preview
-		const openingBracketIsVisible = firstVisibleLine <= bracketPair.openingBracketLineIndex;
-		if (openingBracketIsVisible) {
-			console.log('Opening bracket line is visible');
+		// If opening bracket/tag is already visible no need to show preview
+		const openingIsVisible = firstVisibleLine <= pair.openingLineIndex;
+		if (openingIsVisible) {
+			console.log('Opening bracket/tag line is visible');
 			clearDecorations();
 			return; 
 		}
 			
-		// First visible line is closing bracket => preview would flicker over closing bracket don't show it
-		const closingBracketIsFirstVisible = firstVisibleLine == bracketPair.closingBracketLineIndex;
-		if (closingBracketIsFirstVisible) {
-			console.log(`Closing bracket line is first visible`);
-			clearDecorations(); // => Clear decoration to keep closing bracket visible
+		// First visible line is closing bracket/tag => preview would flicker over closing bracket/tag don't show it
+		const closingIsFirstVisible = firstVisibleLine == pair.closingLineIndex;
+		if (closingIsFirstVisible) {
+			console.log(`Closing bracket/tag line is first visible`);
+			clearDecorations(); // => Clear decoration to keep closing bracket/tag visible
 			return;
 		}
 		
-		// Closing bracket is no longer visible after scrolling down
-		const closingBracketIsVisible = firstVisibleLine > bracketPair.closingBracketLineIndex;
-		if (closingBracketIsVisible) {
-			console.log(`Closing bracket line is no longer visible`);
-			clearDecorations(); // => Clear decoration since none of the brackets is in view port
+		// Closing bracket/tag is no longer visible after scrolling down
+		const closingIsVisible = firstVisibleLine > pair.closingLineIndex;
+		if (closingIsVisible) {
+			console.log(`Closing bracket/tag line is no longer visible`);
+			clearDecorations(); // => Clear decoration since none of the brackets/tags is in view port
 			return;
 		}
 
 		// Preview text => original line + line number
-		let contentText = `${bracketPair.openingBracketLineText}  :${bracketPair.openingBracketLineIndex + 1}`;
+		let contentText = `${pair.openingLineText}  :${pair.openingLineIndex + 1}`;
 
 		// Replace whitespace indents with unicode white spaces =>  Otherwise they are not shown and the text is not indented to the correct position
 		contentText = contentText.replace(/ /g, String.fromCodePoint(0x00a0));  // Unicode whitespace
@@ -191,56 +232,186 @@ function activate(context) {
 		activeEditor.setDecorations(decorationType, decorations);
 	}
 
-	function triggerFindBracketPairs() {
-		clearTimeout(bracketPairFindTimeout);
-		bracketPairFindTimeout = setTimeout(findBracketPairs, 500);
+	function triggerFindPairs() {
+		clearTimeout(pairFindTimeout);
+		pairFindTimeout = setTimeout(findPairs, 500);
 	}
 
-	function findBracketPairs() {
+	function findPairs() {
 		
-		bracketPairs = [];
-
+		pairs = [];
+		
 		if (!activeEditor) {
-			console.log('bracket-preview: no active editor!')
+			console.log('bracket-peek: no active editor!')
 			return;
 		}
-
+		
 		const editorText = activeEditor.document.getText();
 		
+		let bracketPairs = findBracketPairs(editorText);
+		console.log(`Found ${bracketPairs.length}  bracket pairs!`, bracketPairs);
+
+		let tagPairs = findTagPairs(editorText);
+		console.log(`Found ${tagPairs.length}  tag pairs!`, tagPairs);
+		
+		pairs = [].concat(bracketPairs).concat(tagPairs);
+
+		
+		// Remove pairs where opening and closing line are the same => there will never be a preview for them
+		pairs = pairs.filter(pair => {
+			return pair.openingLineIndex != pair.closingLineIndex;
+		});
+
+		console.log(`Removed single line pairs!`, pairs);
+
+
+		triggerPreview();
+	}
+
+	function findBracketPairs(editorText) {
+		
+		let bracketPairs = [];
+
 		// Find each line with an opening bracket
-		const regEx = /(.*{$)/gm;
+		const regExBracket = /.*{/gm;
 		let match;
-		while (match = regEx.exec(editorText)) { // For each opening bracket '{'
-			
-			// Opening bracket line e.g.: 'function example() {'
-			const openingBracketLineText = match[0];
-			const openingBracketIndex = match.index + openingBracketLineText.length;
-			const openingBracketLineIndex = editorText.substring(0, openingBracketIndex).split('\n').length - 1;
+		while (match = regExBracket.exec(editorText)) { // For each opening bracket
+
+			const openingLineText = match[0]; // '  function example() {'
+			const openingIndex = match.index + openingLineText.length - 1;
+			const openingLineIndex = editorText.substring(0, openingIndex + 1).split('\n').length - 1;
 
 			// Closing bracket line e.g.: '}'
-			const closingBracketIndex = findClosingBracket(editorText, match.index + match[0].length - 1); 
+			const closingIndex = findClosingBracket(editorText, openingIndex);
 
-			if (!closingBracketIndex) continue;
-			
+			if (!closingIndex) continue;
+
 			// All lines from document start to (including) closing bracket
-			// closingBracketIndex + 1 => to include bracket if it is on a new line
-			const linesToClosingBracket = editorText.substring(0, closingBracketIndex + 1).split('\n');
+			// closingIndex + 1 => to include bracket if it is on a new line
+			const linesToClosing = editorText.substring(0, closingIndex + 1).split('\n');
 
-			const closingBracketLineIndex = linesToClosingBracket.length - 1;
-			const closingBracketOffset = linesToClosingBracket[linesToClosingBracket.length - 1].length - 1; // Offset in line
-	
-			// Cache pairs
+			const closingLineIndex = linesToClosing.length - 1;
+			const closingOffset = linesToClosing[linesToClosing.length - 1].length - 1; // Offset in line
+
+			// Add pair
 			bracketPairs.push({
-				openingBracketLineIndex,
-				openingBracketLineText,
-				closingBracketLineIndex,
-				closingBracketOffset
+				openingLineIndex,
+				openingLineText,
+				closingLineIndex,
+				closingOffset
 			});
 		} 
 
-		console.log(`Found ${bracketPairs.length}  bracket pairs!`, bracketPairs);
+		return bracketPairs;
+	}
 
-		triggerOpeningBracketPreview();
+	function findTagPairs(editorText) {
+
+		let tagPairs = [];
+
+		const regExTag = /.*<[a-zA-Z0-9]* .*>?/gm;
+		while (match = regExTag.exec(editorText)) { // For each opening tag
+
+			const openingLineText = match[0]; // '   <div class="example" > 
+			const tag = (/<[a-zA-Z0-9]* /).exec(match[0])[0].trim(); // '<div'
+			const tagName = tag.substring(1, tag.length); // 'div'
+			const openingIndex = match.index + openingLineText.lastIndexOf(tag);
+			const openingLineIndex = editorText.substring(0, openingIndex + 1).split('\n').length - 1;
+
+			// Closing tag line e.g.: '}'
+			const closingIndex = findClosingTag(editorText, tagName, openingIndex);
+
+			if (!closingIndex) continue;
+
+			// All lines from document start to (including) closing bracket
+			// closingIndex + 1 => to include bracket if it is on a new line
+			const linesToClosing = editorText.substring(0, closingIndex + 1).split('\n');
+
+			const closingLineIndex = linesToClosing.length - 1;
+			const closingOffset = linesToClosing[linesToClosing.length - 1].length - 1; // Offset in line
+
+			// Add pair
+			tagPairs.push({
+				openingLineIndex,
+				openingLineText,
+				closingLineIndex,
+				closingOffset
+			});
+		}
+		
+		return tagPairs;
+	}
+
+	function findClosingBracket(editorText, index) {
+		// If index given is invalid and is  
+		// not an opening bracket.  
+		if (editorText[index] !== '{') {
+			// console.log(editorText + ", " + index + ": -1\n");
+			return -1;
+		}
+
+		// Count depth of nesting => amount of same opened tags. Starts with initial bracket
+		let depth = 0;
+
+		// Traverse through string starting from given index.  
+		for (; index < editorText.length; index++) {
+			if (editorText[index] === '{') { // If current character is an opening bracket => nested =>  increase depth.  
+				depth++;
+			} else if (editorText[index] === '}') { // If current character is a closing  bracket => decrease depth
+				depth--;
+				if (depth === 0) {  // If depth level is 0 all brackets are closed now we found the correct closing bracket
+					return index;
+				}
+			}
+		}
+		return -1;
+	}
+
+	function findClosingTag(editorText, tagName, index) {
+
+		tagName = tagName.trim(); // '</div'
+
+		// Find initial and nested opening tags
+		const openingTagSearch = `<${tagName} `; // '</div '
+
+		// Different formats to find the beginning of the correct and nested closing tags
+		const closingTag1Search = `</${tagName} `; // '</div '
+		const closingTag2Search = `</${tagName}>`; // '</div>'
+
+		// Check if whole text starts at index 
+		isTextAtIndex = (search, index) => {
+			return editorText.substring(index, Math.min(index + search.length, editorText.length)) === search;
+		}
+
+		// If index given is invalid and is not the opening tag.
+		if (!isTextAtIndex(openingTagSearch, index)) {
+			return -1;
+		}
+
+		// Count depth of nesting => amount of same opened tags. Starts with initial tag
+		depth = 0;
+
+		while (index < editorText.length) {
+
+			if (editorText[index] !== '<') { // No chance for open or close Tag => continue
+				index++;
+
+			} else if (isTextAtIndex(openingTagSearch, index)) { // Check opening tag starts at index
+				depth++; // Add opening tag to stack (starts with initial tag)
+				index += openingTagSearch.length;
+
+			} else if (isTextAtIndex(closingTag1Search, index) || isTextAtIndex(closingTag2Search, index)) { // Check closing tag starts at index
+				depth--; // Remove last opening tag from stack
+
+				if (depth === 0) { // If depth level is 0 all tags are closed now we found the correct closing tag
+					return index;
+				}
+				index += closingTag1Search.length;
+			} else {
+				index++; // Just one '<' of a different tag type or '<' in content / attribute
+			}
+		}
+		return -1;
 	}
 
 	function clearDecorations() {
@@ -251,93 +422,30 @@ function activate(context) {
 		}
 	}
 
-	function findClosestClosingBracketInLine(pos) {
-		const posBefore = new vscode.Position(pos.line, Math.max(0, pos.character - 1));
-
-		// Search bracket near carret first
-		if (editorCharAt(pos) == '}') { // Closing bracket after carret
-			return pos;
-
-		} else if (editorCharAt(posBefore) == '}') { // Closing bracket before carret
-			return posBefore;
-
-		} else { // Search for next (preferred) or previous bracket in line
-			const lineText = activeEditor.document.lineAt(pos.line).text;
-			const nextBracketIndex = lineText.substring(pos.character).indexOf('}');
-			const previousBracketIndex = lineText.substring(0, Math.max(pos.character - 1, 0)).lastIndexOf('}');
-
-			if (nextBracketIndex != -1) {
-				return new vscode.Position(pos.line, pos.character + nextBracketIndex);
-
-			} else if (previousBracketIndex != -1) {
-				return new vscode.Position(pos.line, previousBracketIndex);
-			}
-		}
-	}
-
-
-	function editorCharAt(position) {
+	function editorHasTextAt(text, position) {
 		if (!activeEditor) return null;
-		return activeEditor.document.lineAt(position.line).text.charAt(position.character);
+		const lineText = activeEditor.document.lineAt(position.line).text;
+		const textStart = position.character;
+		const textEnd = Math.min(position.character + text.length, lineText.length);
+
+		return lineText.substring(textStart, textEnd) == text;
 	}
 
-	// On startup
-	if (activeEditor) {
-		triggerFindBracketPairs();
+	function regexIndexOf(string ,regex) {
+		var match = string.match(regex);
+		return match ? string.indexOf(match[0]) : -1;
+	}
+	
+	function regexLastIndexOf(string, regex) {
+		var match = string.match(regex);
+		return match ? string.lastIndexOf(match[match.length - 1]) : -1;
 	}
 
-	// On editor change
-	vscode.window.onDidChangeActiveTextEditor(editor => {
-		activeEditor = editor;
-		if (editor) triggerFindBracketPairs();
-	
-	}, null, context.subscriptions);
-	
-	// On text change
-	vscode.workspace.onDidChangeTextDocument(event => {
-		if (activeEditor && event.document === activeEditor.document) triggerFindBracketPairs();
-	}, null, context.subscriptions);
 
 }
 
 // this method is called when your extension is deactivated
 function deactivate() { }
-
-
-// https://www.geeksforgeeks.org/find-index-closing-bracket-given-opening-bracket-expression/
-function findClosingBracket(expression, index) {
-	let i;
-
-	// If index given is invalid and is  
-	// not an opening bracket.  
-	if (expression[index] !== '{') {
-		// console.log(expression + ", " + index + ": -1\n");  
-		return -1;
-	}
-
-	// Stack to store opening brackets.  
-	let st = [];
-
-	// Traverse through string starting from  
-	// given index.  
-	for (i = index; i < expression.length; i++) {
-
-		// If current character is an  
-		// opening bracket push it in stack.  
-		if (expression[i] === '{') {
-			st.push(expression[i]);
-		} // If current character is a closing  
-		// bracket, pop from stack. If stack  
-		// is empty, then this closing  
-		// bracket is required bracket.  
-		else if (expression[i] === '}') {
-			st.pop();
-			if (st.length === 0) {
-				return i;
-			}
-		}
-	}
-}
 
 module.exports = {
 	activate,
