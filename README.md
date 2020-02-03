@@ -34,19 +34,19 @@ Please note that the according language support extension needs to be installed 
 
 ## Release Notes
 
-#### 1.0.0
-- Initial release of bracket-peek
-#### 1.0.1
-- Rename display name to "Bracket Peek"
-#### 1.0.2 / 1.0.3
-- Updated logo with icon
-#### 1.0.4
-- Support *.dart files
-#### 1.0.5
-- Support *.java *.php *.c *cs *.cpp *.m *.h files
-- Improve hover functionality to find closing bracket in whole hovered line 
 #### 1.1.0
 - Support markup based languages by looking up tags: *.html, *.xml
+#### 1.0.5
+- Support *.java *.php *.c *cs *.cpp *.m *.h files
+- Improve hover functionality to find closing bracket in whole hovered line
+#### 1.0.4
+- Support *.dart files
+#### 1.0.3 / 1.0.2
+- Updated logo with icon
+#### 1.0.1
+- Rename display name to "Bracket Peek"
+#### 1.0.0
+- Initial release of bracket-peek
 
 
 ## Known Issues
