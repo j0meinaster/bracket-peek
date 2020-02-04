@@ -440,8 +440,6 @@ function activate(context) {
 		var match = string.match(regex);
 		return match ? string.lastIndexOf(match[match.length - 1]) : -1;
 	}
-
-
 }
 
 // this method is called when your extension is deactivated
