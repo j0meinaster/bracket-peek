@@ -246,12 +246,10 @@ function activate(context) {
 			return;
 		}
 		
-		const editorText = activeEditor.document.getText();
-		
-		let bracketPairs = findBracketPairs(editorText);
+		let bracketPairs = findBracketPairs();
 		console.log(`Found ${bracketPairs.length}  bracket pairs!`, bracketPairs);
 
-		let tagPairs = findTagPairs(editorText);
+		let tagPairs = findTagPairs();
 		console.log(`Found ${tagPairs.length}  tag pairs!`, tagPairs);
 		
 		pairs = [].concat(bracketPairs).concat(tagPairs);
@@ -263,23 +261,34 @@ function activate(context) {
 		});
 
 		console.log(`Removed single line pairs!`, pairs);
-
-
+		
+		
 		triggerPreview();
 	}
-
-	function findBracketPairs(editorText) {
-		
+	
+	function findBracketPairs() {
 		let bracketPairs = [];
 
+		const editorText = activeEditor.document.getText();
+		
 		// Find each line with an opening bracket
 		const regExBracket = /.*{/gm;
 		let match;
 		while (match = regExBracket.exec(editorText)) { // For each opening bracket
 
-			const openingLineText = match[0]; // '  function example() {'
+			let openingLineText = match[0]; // '  function example() {'
 			const openingIndex = match.index + openingLineText.length - 1;
-			const openingLineIndex = editorText.substring(0, openingIndex + 1).split('\n').length - 1;
+			let openingLineIndex = editorText.substring(0, openingIndex + 1).split('\n').length - 1;
+
+
+			// If a code formatter is used to put opening bracket on a new line, show previous line as preview
+			// 
+			// 	function(x, y) // <= Expected preview
+			// 	{
+			if (openingLineText.trim() == '{' && openingLineIndex > 0) {
+				openingLineIndex = openingLineIndex - 1;
+				openingLineText = activeEditor.document.lineAt(openingLineIndex).text;
+			}
 
 			// Closing bracket line e.g.: '}'
 			const closingIndex = findClosingBracket(editorText, openingIndex);
@@ -305,9 +314,10 @@ function activate(context) {
 		return bracketPairs;
 	}
 
-	function findTagPairs(editorText) {
-
+	function findTagPairs() {
 		let tagPairs = [];
+		
+		const editorText = activeEditor.document.getText();
 
 		const regExTag = /.*<[a-zA-Z0-9]* .*>?/gm;
 		while (match = regExTag.exec(editorText)) { // For each opening tag

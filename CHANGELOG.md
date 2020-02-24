@@ -1,5 +1,7 @@
 # Release Notes
 
+## [1.1.2]
+- Support code format, where open curly brackets are put on a new line => [Preview multiple lines? #4](https://github.com/j0meinaster/bracket-peek/issues/4)
 ## [1.1.1]
 - Move release notes to [CHANGELOG.md](https://github.com/j0meinaster/bracket-peek/blob/master/CHANGELOG.md) => [Hint: use the changelog to log updates #3](https://github.com/j0meinaster/bracket-peek/issues/3)
 ## [1.1.0]
