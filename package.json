@@ -32,6 +32,20 @@
 		"onLanguage:xml"
 	],
 	"main": "./extension.js",
+	"contributes": {
+		"configuration": [
+			{
+				"title": "bracket-peek",
+				"properties": {
+					"bracket-peek.debugMode": {
+						"type": "boolean",
+						"default": false,
+						"description": "enable debug logging"
+					}
+				}
+			}
+		],
+	},
 	"devDependencies": {
 		"@types/node": "^12.11.7",
 		"@types/vscode": "^1.40.0",

@@ -5,12 +5,14 @@
 // Import the module and reference it with the alias vscode in your code below
 const vscode = require('vscode');
 
+let logging = false;
 
 /**
  * @param {vscode.ExtensionContext} context
  */
 function activate(context) {
-	console.log('bracket-preview activated');
+	logging = vscode.workspace.getConfiguration('bracket-peek').debugMode;
+	if (logging) { console.log('bracket-peek activated'); }
 	
 	// Decoration styles
 	const decorationType = vscode.window.createTextEditorDecorationType({
@@ -46,6 +48,13 @@ function activate(context) {
 	
 	let pairFindTimeout;
 	let scrollTimeout;
+
+	vscode.workspace.onDidChangeConfiguration((cfg) =>
+	{
+		if (cfg.affectsConfiguration('bracket-peek.debugMode')) {
+			logging = vscode.workspace.getConfiguration('bracket-peek').debugMode;
+		}
+	}, null, context.subscriptions);
 
 	// Text selected or carret moved
 	vscode.window.onDidChangeTextEditorSelection(e => {
@@ -83,7 +92,7 @@ function activate(context) {
 	vscode.languages.registerHoverProvider('*', {
 		provideHover(document, position, token) {
 			token.onCancellationRequested(() => {
-				console.log('CANCEL');
+				if (logging) { console.log('CANCEL'); }
 				triggerPreview();
 			});
 
@@ -162,7 +171,7 @@ function activate(context) {
 
 		if (!pair) return clearDecorations(); // No match => clear
 
-		console.log(`Found opening =>  ${pair.openingLineText + 1}: ${pair.openingLineText}`, pair);
+		if (logging) { console.log(`Found opening =>  ${pair.openingLineText + 1}: ${pair.openingLineText}`, pair); }
 
 		// First completely visible line in editor
 		const firstVisibleLine = activeEditor.visibleRanges[0].start.line;
@@ -170,7 +179,7 @@ function activate(context) {
 		// If opening bracket/tag is already visible no need to show preview
 		const openingIsVisible = firstVisibleLine <= pair.openingLineIndex;
 		if (openingIsVisible) {
-			console.log('Opening bracket/tag line is visible');
+			if (logging) { console.log('Opening bracket/tag line is visible'); }
 			clearDecorations();
 			return; 
 		}
@@ -178,7 +187,7 @@ function activate(context) {
 		// First visible line is closing bracket/tag => preview would flicker over closing bracket/tag don't show it
 		const closingIsFirstVisible = firstVisibleLine == pair.closingLineIndex;
 		if (closingIsFirstVisible) {
-			console.log(`Closing bracket/tag line is first visible`);
+			if (logging) { console.log(`Closing bracket/tag line is first visible`); }
 			clearDecorations(); // => Clear decoration to keep closing bracket/tag visible
 			return;
 		}
@@ -186,7 +195,7 @@ function activate(context) {
 		// Closing bracket/tag is no longer visible after scrolling down
 		const closingIsVisible = firstVisibleLine > pair.closingLineIndex;
 		if (closingIsVisible) {
-			console.log(`Closing bracket/tag line is no longer visible`);
+			if (logging) { console.log(`Closing bracket/tag line is no longer visible`); }
 			clearDecorations(); // => Clear decoration since none of the brackets/tags is in view port
 			return;
 		}
@@ -242,15 +251,15 @@ function activate(context) {
 		pairs = [];
 		
 		if (!activeEditor) {
-			console.log('bracket-peek: no active editor!')
+			if (logging) { console.log('bracket-peek: no active editor!') }
 			return;
 		}
 		
 		let bracketPairs = findBracketPairs();
-		console.log(`Found ${bracketPairs.length}  bracket pairs!`, bracketPairs);
+		if (logging) { console.log(`Found ${bracketPairs.length}  bracket pairs!`, bracketPairs); }
 
 		let tagPairs = findTagPairs();
-		console.log(`Found ${tagPairs.length}  tag pairs!`, tagPairs);
+		if (logging) { console.log(`Found ${tagPairs.length}  tag pairs!`, tagPairs); }
 		
 		pairs = [].concat(bracketPairs).concat(tagPairs);
 
@@ -260,7 +269,7 @@ function activate(context) {
 			return pair.openingLineIndex != pair.closingLineIndex;
 		});
 
-		console.log(`Removed single line pairs!`, pairs);
+		if (logging) { console.log(`Removed single line pairs!`, pairs); }
 		
 		
 		triggerPreview();
@@ -356,7 +365,7 @@ function activate(context) {
 		// If index given is invalid and is  
 		// not an opening bracket.  
 		if (editorText[index] !== '{') {
-			// console.log(editorText + ", " + index + ": -1\n");
+			// if (logging) { console.log(editorText + ", " + index + ": -1\n"); }
 			return -1;
 		}
 
@@ -426,7 +435,7 @@ function activate(context) {
 
 	function clearDecorations() {
 		if (activeEditor && decorations) {
-			console.log('clear decorations');
+			if (logging) { console.log('clear decorations'); }
 			activeEditor.setDecorations(decorationType, []);
 			decorations = null;
 		}
