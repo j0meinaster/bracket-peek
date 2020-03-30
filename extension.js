@@ -226,12 +226,7 @@ function activate(context) {
 		contentText = contentText.replace(/\t/g, unicodeWhitespace+unicodeWhitespace);
 
 		if (peekLocation === 'closing line') {
-			const closingLineText = activeEditor.document.lineAt(pair.closingLineIndex).text;
-			let contentOffset = pair.closingOffset + 1;
-			while (contentOffset < closingLineText.length && ',;'.includes(closingLineText.charAt(contentOffset))) {
-				contentOffset++;
-			}
-
+			const contentOffset = pair.closingOffset + pair.closingLength;
 			const contentPos = new vscode.Position(pair.closingLineIndex, contentOffset);
 
 			decorations = [{ // Closing line decoration
@@ -312,6 +307,8 @@ function activate(context) {
 
 		const editorText = activeEditor.document.getText();
 		
+		// PERF: The substring().split('\n') stuff is extremely inefficient!
+
 		// Find each line with an opening bracket
 		const regExBracket = /.*{/gm;
 		let match;
@@ -342,13 +339,22 @@ function activate(context) {
 
 			const closingLineIndex = linesToClosing.length - 1;
 			const closingOffset = linesToClosing[linesToClosing.length - 1].length - 1; // Offset in line
+			let closingLength = 1;
+
+			if (peekLocation === "closing line") {
+				const closingLineText = activeEditor.document.lineAt(closingLineIndex).text;
+				while (closingOffset + closingLength < closingLineText.length && ',;'.includes(closingLineText.charAt(closingOffset + closingLength))) {
+					closingLength++;
+				}
+			}
 
 			// Add pair
 			bracketPairs.push({
 				openingLineIndex,
 				openingLineText,
 				closingLineIndex,
-				closingOffset
+				closingOffset,
+				closingLength
 			});
 		} 
 
@@ -359,6 +365,8 @@ function activate(context) {
 		let tagPairs = [];
 		
 		const editorText = activeEditor.document.getText();
+
+		// PERF: The substring().split('\n') stuff is extremely inefficient!
 
 		const regExTag = /.*<[a-zA-Z0-9]* .*>?/gm;
 		while (match = regExTag.exec(editorText)) { // For each opening tag
@@ -380,13 +388,15 @@ function activate(context) {
 
 			const closingLineIndex = linesToClosing.length - 1;
 			const closingOffset = linesToClosing[linesToClosing.length - 1].length - 1; // Offset in line
+			const closingLength = 3 + tagName;
 
 			// Add pair
 			tagPairs.push({
 				openingLineIndex,
 				openingLineText,
 				closingLineIndex,
-				closingOffset
+				closingOffset,
+				closingLength
 			});
 		}
 		
