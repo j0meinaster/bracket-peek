@@ -3,7 +3,7 @@
 	"displayName": "Bracket Peek",
 	"description": "Preview the opening line of code matching the inspected closing bracket",
 	"version": "1.2.0",
-	"publisher": "jomeinaster, chrisant996",
+	"publisher": "jomeinaster-chrisant",
 	"icon": "logo.jpg",
 	"keywords": [ "bracket", "closing", "opening", "peek", "preview", "highlight", "curly", "match", "tag", "markup",
 		"sass", "scss", "css", "styles", "typescript", "javascript", "java", "php", "c", "dart", "cs", "csharp", "cpp", 
