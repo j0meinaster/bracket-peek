@@ -6,6 +6,7 @@
 const vscode = require('vscode');
 
 let logging = false;
+let peekLocation = "";
 
 /**
  * @param {vscode.ExtensionContext} context
@@ -13,7 +14,9 @@ let logging = false;
 function activate(context) {
 	logging = vscode.workspace.getConfiguration('bracket-peek').debugMode;
 	if (logging) { console.log('bracket-peek activated'); }
-	
+
+	peekLocation = vscode.workspace.getConfiguration('bracket-peek').peekLocation;
+
 	// Decoration styles
 	const decorationType = vscode.window.createTextEditorDecorationType({
 		light: {
@@ -53,6 +56,9 @@ function activate(context) {
 	{
 		if (cfg.affectsConfiguration('bracket-peek.debugMode')) {
 			logging = vscode.workspace.getConfiguration('bracket-peek').debugMode;
+		}
+		if (cfg.affectsConfiguration('bracket-peek.peekLocation')) {
+			peekLocation = vscode.workspace.getConfiguration('bracket-peek').peekLocation;
 		}
 	}, null, context.subscriptions);
 
@@ -201,41 +207,67 @@ function activate(context) {
 		}
 
 		// Preview text => original line + line number
-		let contentText = `${pair.openingLineText}  :${pair.openingLineIndex + 1}`;
+		let contentText;
+		if (peekLocation === 'closing line') {
+			contentText = `  ${pair.openingLineIndex + 1}:  ${pair.openingLineText}  `;
+		} else {
+			contentText = `${pair.openingLineText}  :${pair.openingLineIndex + 1}`;
+			// Add 200 space afterwards to push the text in this line out of screen
+			// SIDE EFFECT:  Forces the horizontal scrollbar to show up.
+			contentText += Array(200).fill(' ').join('');
+		}
 
 		// Replace whitespace indents with unicode white spaces =>  Otherwise they are not shown and the text is not indented to the correct position
-		contentText = contentText.replace(/ /g, String.fromCodePoint(0x00a0));  // Unicode whitespace
-		
+		const unicodeWhitespace = String.fromCodePoint(0x00a0);  // Unicode whitespace
+		contentText = contentText.replace(/ /g, unicodeWhitespace);
+
 		// TODO:  Handle tab indents, since unicode tabs are not working
 		// Replace tab with 2 whitespaces for now => has no effect?
-		contentText = contentText.replace(/\t/g, `${String.fromCodePoint(0x00a0)}${String.fromCodePoint(0x00a0)}`);
+		contentText = contentText.replace(/\t/g, unicodeWhitespace+unicodeWhitespace);
 
-		// Add 200 Unicode Whitespaces afterwards to push the text in this line out of screen 
-		contentText += Array(200).fill(String.fromCodePoint(0x00a0)).join(''); // Unicode whitespace
-
-		// Sometimes there is a half visible line above the complete visible line
-		// => add an empty text decoration here to push the original text of this line out of the screen
-		let emptyText = Array(contentText.length).fill(String.fromCodePoint(0x00a0)).join(''); // Unicode whitespace
-
-		const preContentPos = new vscode.Position(Math.max(0, firstVisibleLine - 1));
-		const contentPos = new vscode.Position(Math.max(1, firstVisibleLine));
-
-		decorations = [{ // Empty line decoration
-			range: new vscode.Range(preContentPos, preContentPos),
-			renderOptions: {
-				after: {
-					contentText: emptyText,
-				},
+		if (peekLocation === 'closing line') {
+			const closingLineText = activeEditor.document.lineAt(pair.closingLineIndex).text;
+			let contentOffset = pair.closingOffset + 1;
+			while (contentOffset < closingLineText.length && ',;'.includes(closingLineText.charAt(contentOffset))) {
+				contentOffset++;
 			}
-		},
-		{ // Preview content line decoration
-			range: new vscode.Range(contentPos, contentPos),
-			renderOptions: {
-				after: {
-					contentText: contentText,
-				},
-			}
-		}];
+
+			const contentPos = new vscode.Position(pair.closingLineIndex, contentOffset);
+
+			decorations = [{ // Closing line decoration
+				range: new vscode.Range(contentPos, contentPos),
+				renderOptions: {
+					after: {
+						fontStyle: 'italic',
+						contentText: contentText,
+					},
+				}
+			}];
+		} else {
+			// Sometimes there is a half visible line above the complete visible line
+			// => add an empty text decoration here to push the original text of this line out of the screen
+			let emptyText = Array(contentText.length).fill(unicodeWhitespace).join(''); // Unicode whitespace
+
+			const preContentPos = new vscode.Position(Math.max(0, firstVisibleLine - 1));
+			const contentPos = new vscode.Position(Math.max(1, firstVisibleLine));
+
+			decorations = [{ // Empty line decoration
+				range: new vscode.Range(preContentPos, preContentPos),
+				renderOptions: {
+					after: {
+						contentText: emptyText,
+					},
+				}
+			},
+			{ // Preview content line decoration
+				range: new vscode.Range(contentPos, contentPos),
+				renderOptions: {
+					after: {
+						contentText: contentText,
+					},
+				}
+			}];
+		}
 
 		// Apply decorations
 		activeEditor.setDecorations(decorationType, decorations);

@@ -37,6 +37,15 @@
 			{
 				"title": "bracket-peek",
 				"properties": {
+					"bracket-peek.peekLocation": {
+						"type": "string",
+						"default": "top line",
+						"enum": [
+							"top line",
+							"closing line"
+						],
+						"description": "where to show the bracket peek"
+					},
 					"bracket-peek.debugMode": {
 						"type": "boolean",
 						"default": false,
