@@ -5,22 +5,33 @@
 // Import the module and reference it with the alias vscode in your code below
 const vscode = require('vscode');
 
-let logging = false;
+/** 
+ * Set environment parameter to enable logging
+ * e.g in launch.json.
+ * 
+ *  "env": {
+			"BRACKET_PEEK_LOGGING": "true"
+		},
+ */
+const loggingEnabled = process.env.BRACKET_PEEK_LOGGING == 'true';
+
 let peekLocation = "";
-let peekItalic = false;
 
 /**
  * @param {vscode.ExtensionContext} context
  */
 function activate(context) {
-	logging = vscode.workspace.getConfiguration('bracket-peek').debugMode;
-	if (logging) { console.log('bracket-peek activated'); }
+	log('bracket-peek activated');
 
 	peekLocation = vscode.workspace.getConfiguration('bracket-peek').peekLocation;
-	peekItalic = vscode.workspace.getConfiguration('bracket-peek').peekItalic;
+
+	const peekItalic = vscode.workspace.getConfiguration('bracket-peek').peekItalic;
 
 	// Decoration styles
 	const decorationType = vscode.window.createTextEditorDecorationType({
+		after: {
+			fontStyle: peekItalic ? 'italic' : 'normal',
+		},
 		light: {
 			after: {
 				color: 'rgba(0,0,0,.3)'
@@ -57,9 +68,10 @@ function activate(context) {
 	vscode.workspace.onDidChangeConfiguration((cfg) =>
 	{
 		if (cfg.affectsConfiguration('bracket-peek')) {
-			logging = vscode.workspace.getConfiguration('bracket-peek').debugMode;
 			peekLocation = vscode.workspace.getConfiguration('bracket-peek').peekLocation;
-			peekItalic = vscode.workspace.getConfiguration('bracket-peek').peekItalic;
+			
+			const peekItalic = vscode.workspace.getConfiguration('bracket-peek').peekItalic;
+			decorationType.after.fontStyle = peekItalic ? 'italic' : 'normal';
 		}
 	}, null, context.subscriptions);
 
@@ -99,7 +111,7 @@ function activate(context) {
 	vscode.languages.registerHoverProvider('*', {
 		provideHover(document, position, token) {
 			token.onCancellationRequested(() => {
-				if (logging) { console.log('CANCEL'); }
+				log('CANCEL');
 				triggerPreview();
 			});
 
@@ -178,7 +190,7 @@ function activate(context) {
 
 		if (!pair) return clearDecorations(); // No match => clear
 
-		if (logging) { console.log(`Found opening =>  ${pair.openingLineText + 1}: ${pair.openingLineText}`, pair); }
+		log(`Found opening =>  ${pair.openingLineText + 1}: ${pair.openingLineText}`, pair);
 
 		// First completely visible line in editor
 		const firstVisibleLine = activeEditor.visibleRanges[0].start.line;
@@ -186,15 +198,16 @@ function activate(context) {
 		// If opening bracket/tag is already visible no need to show preview
 		const openingIsVisible = firstVisibleLine <= pair.openingLineIndex;
 		if (openingIsVisible) {
-			if (logging) { console.log('Opening bracket/tag line is visible'); }
+			log('Opening bracket/tag line is visible');
 			clearDecorations();
 			return; 
 		}
 			
 		// First visible line is closing bracket/tag => preview would flicker over closing bracket/tag don't show it
+		// If preview on closing line, there will be no flicker when inspecting the first visible line
 		const closingIsFirstVisible = firstVisibleLine == pair.closingLineIndex;
-		if (closingIsFirstVisible) {
-			if (logging) { console.log(`Closing bracket/tag line is first visible`); }
+		if (closingIsFirstVisible && peekLocation !== 'closing line') {
+			log(`Closing bracket/tag line is first visible`);
 			clearDecorations(); // => Clear decoration to keep closing bracket/tag visible
 			return;
 		}
@@ -202,21 +215,24 @@ function activate(context) {
 		// Closing bracket/tag is no longer visible after scrolling down
 		const closingIsVisible = firstVisibleLine > pair.closingLineIndex;
 		if (closingIsVisible) {
-			if (logging) { console.log(`Closing bracket/tag line is no longer visible`); }
+			log(`Closing bracket/tag line is no longer visible`);
 			clearDecorations(); // => Clear decoration since none of the brackets/tags is in view port
 			return;
 		}
 
+		if (peekLocation === 'closing line') addPreviewAtEndOfLine(pair);
+		else addPreviewAtTop(pair);	
+
+	}
+
+	function addPreviewAtTop(pair) {
+		const firstVisibleLine = activeEditor.visibleRanges[0].start.line;
+
 		// Preview text => original line + line number
-		let contentText;
-		if (peekLocation === 'closing line') {
-			contentText = `  ${pair.openingLineIndex + 1}:  ${pair.openingLineText}  `;
-		} else {
-			contentText = `${pair.openingLineText}  :${pair.openingLineIndex + 1}`;
-			// Add 200 space afterwards to push the text in this line out of screen
-			// SIDE EFFECT:  Forces the horizontal scrollbar to show up.
-			contentText += Array(200).fill(' ').join('');
-		}
+		let contentText  = `${pair.openingLineText}  :${pair.openingLineIndex + 1}`;
+		// Add 200 space afterwards to push the text in this line out of screen
+		// SIDE EFFECT:  Forces the horizontal scrollbar to show up.
+		contentText += Array(200).fill(' ').join('');
 
 		// Replace whitespace indents with unicode white spaces =>  Otherwise they are not shown and the text is not indented to the correct position
 		const unicodeWhitespace = String.fromCodePoint(0x00a0);  // Unicode whitespace
@@ -224,46 +240,52 @@ function activate(context) {
 
 		// TODO:  Handle tab indents, since unicode tabs are not working
 		// Replace tab with 2 whitespaces for now => has no effect?
-		contentText = contentText.replace(/\t/g, unicodeWhitespace+unicodeWhitespace);
+		contentText = contentText.replace(/\t/g, unicodeWhitespace + unicodeWhitespace);
 
-		if (peekLocation === 'closing line') {
-			const contentOffset = pair.closingOffset + pair.closingLength;
-			const contentPos = new vscode.Position(pair.closingLineIndex, contentOffset);
+		// Sometimes there is a half visible line above the complete visible line
+		// => add an empty text decoration here to push the original text of this line out of the screen
+		let emptyText = Array(contentText.length).fill(unicodeWhitespace).join(''); // Unicode whitespace
 
-			decorations = [{ // Closing line decoration
-				range: new vscode.Range(contentPos, contentPos),
-				renderOptions: {
-					after: {
-						fontStyle: peekItalic ? 'italic' : 'normal',
-						contentText: contentText,
-					},
-				}
-			}];
-		} else {
-			// Sometimes there is a half visible line above the complete visible line
-			// => add an empty text decoration here to push the original text of this line out of the screen
-			let emptyText = Array(contentText.length).fill(unicodeWhitespace).join(''); // Unicode whitespace
+		const preContentPos = new vscode.Position(Math.max(0, firstVisibleLine - 1));
+		const contentPos = new vscode.Position(Math.max(1, firstVisibleLine));
 
-			const preContentPos = new vscode.Position(Math.max(0, firstVisibleLine - 1));
-			const contentPos = new vscode.Position(Math.max(1, firstVisibleLine));
+		decorations = [{ // Empty line decoration
+			range: new vscode.Range(preContentPos, preContentPos),
+			renderOptions: {
+				after: {
+					contentText: emptyText,
+				},
+			}
+		},
+		{ // Preview content line decoration
+			range: new vscode.Range(contentPos, contentPos),
+			renderOptions: {
+				after: {
+					contentText: contentText,
+				},
+			}
+		}];
 
-			decorations = [{ // Empty line decoration
-				range: new vscode.Range(preContentPos, preContentPos),
-				renderOptions: {
-					after: {
-						contentText: emptyText,
-					},
-				}
-			},
-			{ // Preview content line decoration
-				range: new vscode.Range(contentPos, contentPos),
-				renderOptions: {
-					after: {
-						contentText: contentText,
-					},
-				}
-			}];
-		}
+		// Apply decorations
+		activeEditor.setDecorations(decorationType, decorations);
+	}
+
+	function addPreviewAtEndOfLine(pair) {
+
+		// Preview text => original line + line number
+		let contentText = `  ${pair.openingLineIndex + 1}:  ${pair.openingLineText}  `;
+		
+		const contentOffset = activeEditor.document.lineAt(pair.closingLineIndex).text.length + 1;
+		const contentPos = new vscode.Position(pair.closingLineIndex, contentOffset);
+
+		decorations = [{ // Closing line decoration
+			range: new vscode.Range(contentPos, contentPos),
+			renderOptions: {
+				after: {
+					contentText: contentText,
+				},
+			}
+		}];
 
 		// Apply decorations
 		activeEditor.setDecorations(decorationType, decorations);
@@ -279,15 +301,15 @@ function activate(context) {
 		pairs = [];
 		
 		if (!activeEditor) {
-			if (logging) { console.log('bracket-peek: no active editor!') }
+			log('bracket-peek: no active editor!');
 			return;
 		}
 		
 		let bracketPairs = findBracketPairs();
-		if (logging) { console.log(`Found ${bracketPairs.length}  bracket pairs!`, bracketPairs); }
+		log(`Found ${bracketPairs.length}  bracket pairs!`, bracketPairs);
 
 		let tagPairs = findTagPairs();
-		if (logging) { console.log(`Found ${tagPairs.length}  tag pairs!`, tagPairs); }
+		log(`Found ${tagPairs.length}  tag pairs!`, tagPairs);
 		
 		pairs = [].concat(bracketPairs).concat(tagPairs);
 
@@ -297,7 +319,7 @@ function activate(context) {
 			return pair.openingLineIndex != pair.closingLineIndex;
 		});
 
-		if (logging) { console.log(`Removed single line pairs!`, pairs); }
+		log(`Removed single line pairs!`, pairs);
 		
 		
 		triggerPreview();
@@ -308,8 +330,6 @@ function activate(context) {
 
 		const editorText = activeEditor.document.getText();
 		
-		// PERF: The substring().split('\n') stuff is extremely inefficient!
-
 		// Find each line with an opening bracket
 		const regExBracket = /.*{/gm;
 		let match;
@@ -317,7 +337,7 @@ function activate(context) {
 
 			let openingLineText = match[0]; // '  function example() {'
 			const openingIndex = match.index + openingLineText.length - 1;
-			let openingLineIndex = editorText.substring(0, openingIndex + 1).split('\n').length - 1;
+			let openingLineIndex = activeEditor.document.positionAt(openingIndex).line;
 
 
 			// If a code formatter is used to put opening bracket on a new line, show previous line as preview
@@ -336,26 +356,17 @@ function activate(context) {
 
 			// All lines from document start to (including) closing bracket
 			// closingIndex + 1 => to include bracket if it is on a new line
-			const linesToClosing = editorText.substring(0, closingIndex + 1).split('\n');
+			const closingPosition = activeEditor.document.positionAt(closingIndex);
 
-			const closingLineIndex = linesToClosing.length - 1;
-			const closingOffset = linesToClosing[linesToClosing.length - 1].length - 1; // Offset in line
-			let closingLength = 1;
-
-			if (peekLocation === "closing line") {
-				const closingLineText = activeEditor.document.lineAt(closingLineIndex).text;
-				while (closingOffset + closingLength < closingLineText.length && ',;'.includes(closingLineText.charAt(closingOffset + closingLength))) {
-					closingLength++;
-				}
-			}
+			const closingLineIndex = closingPosition.line
+			const closingOffset = closingPosition.character; // Offset in line
 
 			// Add pair
 			bracketPairs.push({
 				openingLineIndex,
 				openingLineText,
 				closingLineIndex,
-				closingOffset,
-				closingLength
+				closingOffset
 			});
 		} 
 
@@ -367,8 +378,6 @@ function activate(context) {
 		
 		const editorText = activeEditor.document.getText();
 
-		// PERF: The substring().split('\n') stuff is extremely inefficient!
-
 		const regExTag = /.*<[a-zA-Z0-9]* .*>?/gm;
 		while (match = regExTag.exec(editorText)) { // For each opening tag
 
@@ -376,7 +385,7 @@ function activate(context) {
 			const tag = (/<[a-zA-Z0-9]* /).exec(match[0])[0].trim(); // '<div'
 			const tagName = tag.substring(1, tag.length); // 'div'
 			const openingIndex = match.index + openingLineText.lastIndexOf(tag);
-			const openingLineIndex = editorText.substring(0, openingIndex + 1).split('\n').length - 1;
+			let openingLineIndex = activeEditor.document.positionAt(openingIndex + 1).line;
 
 			// Closing tag line e.g.: '}'
 			const closingIndex = findClosingTag(editorText, tagName, openingIndex);
@@ -385,19 +394,17 @@ function activate(context) {
 
 			// All lines from document start to (including) closing bracket
 			// closingIndex + 1 => to include bracket if it is on a new line
-			const linesToClosing = editorText.substring(0, closingIndex + 1).split('\n');
+			const closingPosition = activeEditor.document.positionAt(closingIndex + 1);
 
-			const closingLineIndex = linesToClosing.length - 1;
-			const closingOffset = linesToClosing[linesToClosing.length - 1].length - 1; // Offset in line
-			const closingLength = 3 + tagName;
+			const closingLineIndex = closingPosition.line;
+			const closingOffset = closingPosition.character; // Offset in line
 
 			// Add pair
 			tagPairs.push({
 				openingLineIndex,
 				openingLineText,
 				closingLineIndex,
-				closingOffset,
-				closingLength
+				closingOffset
 			});
 		}
 		
@@ -408,7 +415,6 @@ function activate(context) {
 		// If index given is invalid and is  
 		// not an opening bracket.  
 		if (editorText[index] !== '{') {
-			// if (logging) { console.log(editorText + ", " + index + ": -1\n"); }
 			return -1;
 		}
 
@@ -478,7 +484,7 @@ function activate(context) {
 
 	function clearDecorations() {
 		if (activeEditor && decorations) {
-			if (logging) { console.log('clear decorations'); }
+			log('clear decorations');
 			activeEditor.setDecorations(decorationType, []);
 			decorations = null;
 		}
@@ -501,6 +507,12 @@ function activate(context) {
 	function regexLastIndexOf(string, regex) {
 		var match = string.match(regex);
 		return match ? string.lastIndexOf(match[match.length - 1]) : -1;
+	}
+
+	function log() {
+		if (loggingEnabled) {
+			console.log(...arguments);
+		}
 	}
 }
 

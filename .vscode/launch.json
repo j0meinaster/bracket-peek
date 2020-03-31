@@ -9,10 +9,13 @@
 			"name": "Run Extension",
 			"type": "extensionHost",
 			"request": "launch",
-			"runtimeExecutable": "${execPath}",
+			"runtimeExecutable": "PEEK=true ${execPath}",
 			"args": [
-				"--extensionDevelopmentPath=${workspaceFolder}"
-			]
+				"--extensionDevelopmentPath=${workspaceFolder}",
+			],
+			"env": {
+				"BRACKET_PEEK_LOGGING": "true"
+			},
 		},
 		{
 			"name": "Extension Tests",

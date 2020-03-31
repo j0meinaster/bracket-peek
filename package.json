@@ -3,11 +3,38 @@
 	"displayName": "Bracket Peek",
 	"description": "Preview the opening line of code matching the inspected closing bracket",
 	"version": "1.2.0",
-	"publisher": "jomeinaster-chrisant",
+	"publisher": "jomeinaster",
+	"contributors": [ "chrisant"],
 	"icon": "logo.jpg",
-	"keywords": [ "bracket", "closing", "opening", "peek", "preview", "highlight", "curly", "match", "tag", "markup",
-		"sass", "scss", "css", "styles", "typescript", "javascript", "java", "php", "c", "dart", "cs", "csharp", "cpp", 
-		"c plus plus", "c sharp", "html", "xml" ],
+	"keywords": [
+		"bracket",
+		"closing",
+		"opening",
+		"peek",
+		"preview",
+		"highlight",
+		"curly",
+		"match",
+		"tag",
+		"markup",
+		"sass",
+		"scss",
+		"css",
+		"styles",
+		"typescript",
+		"javascript",
+		"java",
+		"php",
+		"c",
+		"dart",
+		"cs",
+		"csharp",
+		"cpp",
+		"c plus plus",
+		"c sharp",
+		"html",
+		"xml"
+	],
 	"engines": {
 		"vscode": "^1.40.0"
 	},
@@ -44,17 +71,12 @@
 							"top line",
 							"closing line"
 						],
-						"description": "where to show the bracket peek"
+						"description": "where to show the bracket preview"
 					},
 					"bracket-peek.peekItalic": {
 						"type": "boolean",
 						"default": false,
-						"description": "show the bracket peek using italics"
-					},
-					"bracket-peek.debugMode": {
-						"type": "boolean",
-						"default": false,
-						"description": "enable debug logging"
+						"description": "show the bracket preview in italic font style"
 					}
 				}
 			}
