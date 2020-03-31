@@ -7,6 +7,7 @@ const vscode = require('vscode');
 
 let logging = false;
 let peekLocation = "";
+let peekItalic = false;
 
 /**
  * @param {vscode.ExtensionContext} context
@@ -16,6 +17,7 @@ function activate(context) {
 	if (logging) { console.log('bracket-peek activated'); }
 
 	peekLocation = vscode.workspace.getConfiguration('bracket-peek').peekLocation;
+	peekItalic = vscode.workspace.getConfiguration('bracket-peek').peekItalic;
 
 	// Decoration styles
 	const decorationType = vscode.window.createTextEditorDecorationType({
@@ -54,11 +56,10 @@ function activate(context) {
 
 	vscode.workspace.onDidChangeConfiguration((cfg) =>
 	{
-		if (cfg.affectsConfiguration('bracket-peek.debugMode')) {
+		if (cfg.affectsConfiguration('bracket-peek')) {
 			logging = vscode.workspace.getConfiguration('bracket-peek').debugMode;
-		}
-		if (cfg.affectsConfiguration('bracket-peek.peekLocation')) {
 			peekLocation = vscode.workspace.getConfiguration('bracket-peek').peekLocation;
+			peekItalic = vscode.workspace.getConfiguration('bracket-peek').peekItalic;
 		}
 	}, null, context.subscriptions);
 
@@ -233,7 +234,7 @@ function activate(context) {
 				range: new vscode.Range(contentPos, contentPos),
 				renderOptions: {
 					after: {
-						fontStyle: 'italic',
+						fontStyle: peekItalic ? 'italic' : 'normal',
 						contentText: contentText,
 					},
 				}

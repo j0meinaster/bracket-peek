@@ -46,6 +46,11 @@
 						],
 						"description": "where to show the bracket peek"
 					},
+					"bracket-peek.peekItalic": {
+						"type": "boolean",
+						"default": false,
+						"description": "show the bracket peek using italics"
+					},
 					"bracket-peek.debugMode": {
 						"type": "boolean",
 						"default": false,
