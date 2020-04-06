@@ -34,7 +34,7 @@ Please note that the according language support extension needs to be installed 
 
 ## Customization
 
-Check bracket peek settings in visual studio code
+Check bracket peek settings in visual studio code.
 
 ### Preview Location
 
@@ -47,7 +47,7 @@ Known Issues:
 - Pushes the content of the first visible lines away, which forces a horizontal scrollbar. This is intended and won't / can't be fixed.
 
 #### In Line
-Show the content of the opening line behind the closing bracket / tag.
+Show the content of the opening line after the closing bracket / tag.
 
 <img src="https://raw.githubusercontent.com/j0meinaster/bracket-peek/master/assets/inline.png" width="400" >
 
