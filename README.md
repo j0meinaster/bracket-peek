@@ -41,7 +41,7 @@ Check bracket peek settings in visual studio code
 #### Editor Top (default)
 Show the content of the opening line at the first visible line of the editor.
 
-![](https://raw.githubusercontent.com/j0meinaster/bracket-peek/master/assets/top.png)
+<img src="https://raw.githubusercontent.com/j0meinaster/bracket-peek/master/assets/top.png" width="400" >
 
 Known Issues:
 - Pushes the content of the first visible lines away, which forces a horizontal scrollbar. This is intended and won't / can't be fixed.
@@ -49,18 +49,18 @@ Known Issues:
 #### In Line
 Show the content of the opening line behind the closing bracket / tag.
 
-![](https://raw.githubusercontent.com/j0meinaster/bracket-peek/master/assets/inline.png)
+<img src="https://raw.githubusercontent.com/j0meinaster/bracket-peek/master/assets/inline.png" width="400" >
 
 #### Hover
 Show the content of the opening line as a tooltip when hovering a closing bracket / tag. 
 Does not work when selecting code.
 
-![](https://raw.githubusercontent.com/j0meinaster/bracket-peek/master/assets/hover.png)
+<img src="https://raw.githubusercontent.com/j0meinaster/bracket-peek/master/assets/hover.png" width="400" >
 
 ### Preview Always (default: false)
 If true, always show the preview. Otherwise only show the preview, if the opening line is currently not visible.
 
-![](https://raw.githubusercontent.com/j0meinaster/bracket-peek/master/assets/always.png)
+<img src="https://raw.githubusercontent.com/j0meinaster/bracket-peek/master/assets/always.png" width="400" >
 
 ### Preview Color (default: Theme default)
 CSS color attribute to change the preview text color. Does not work in combination with location 'Hover'.
