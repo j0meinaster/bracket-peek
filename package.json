@@ -4,8 +4,10 @@
 	"description": "Preview the opening line of code matching the inspected closing bracket",
 	"version": "1.2.0",
 	"publisher": "jomeinaster",
-	"contributors": [ "chrisant"],
-	"icon": "logo.jpg",
+	"contributors": [
+		"chrisant996"
+	],
+	"icon": "assets/logo.jpg",
 	"keywords": [
 		"bracket",
 		"closing",
@@ -58,29 +60,53 @@
 		"onLanguage:html",
 		"onLanguage:xml"
 	],
-	"main": "./extension.js",
+	"main": "./src/extension.js",
 	"contributes": {
 		"configuration": [
 			{
 				"title": "bracket-peek",
 				"properties": {
-					"bracket-peek.peekLocation": {
+					"bracket-peek.previewLocation": {
 						"type": "string",
-						"default": "top line",
+						"default": "Editor top",
 						"enum": [
-							"top line",
-							"closing line"
+							"Editor top",
+							"In line",
+							"Hover"
 						],
-						"description": "where to show the bracket preview"
+						"description": "Where to show the bracket preview. Check Readme for more information and known issues."
 					},
-					"bracket-peek.peekItalic": {
+					"bracket-peek.previewTrigger": {
+						"type": "string",
+						"default": "On select and on hover",
+						"enum": [
+							"On select and on hover",
+							"On select",
+							"On hover"
+						],
+						"description": "Trigger preview on selecting a line with a closing bracket (cursor, range) and / or hovering a closing bracket."
+					},
+					"bracket-peek.previewAlways": {
 						"type": "boolean",
 						"default": false,
-						"description": "show the bracket preview in italic font style"
+						"description": "Always show bracket preview or only if opening is not visible."
+					},
+					"bracket-peek.previewColor": {
+						"type": "string",
+						"default": "Theme default",
+						"description": "Preview text color in css format. (Not supported by location: 'Hover')"
+					},
+					"bracket-peek.previewItalic": {
+						"type": "boolean",
+						"default": false,
+						"description": "Show the bracket preview in italic font style. (Not supported by location: 'Hover')"
 					}
 				}
 			}
 		]
+	},
+	"dependencies": {
+		"is-color": "^1.0.2"
 	},
 	"devDependencies": {
 		"@types/node": "^12.11.7",

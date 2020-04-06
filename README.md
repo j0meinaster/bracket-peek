@@ -12,7 +12,7 @@ Works on:
 - moving carret to or near closing bracket / tag
 - hovering over or near to closing bracket / tag
 
-![](https://raw.githubusercontent.com/j0meinaster/bracket-peek/master/preview.gif)
+![](https://raw.githubusercontent.com/j0meinaster/bracket-peek/master/assets/preview.gif)
 
 
 Works with any programming language containing curly brackets '{ ... }'
@@ -31,6 +31,45 @@ Works with any markup based language containing tags'\<tag\>...\</tag\>'
 - Xml           *.xml
 
 Please note that the according language support extension needs to be installed as well.
+
+## Customization
+
+Check bracket peek settings in visual studio code
+
+### Preview Location
+
+#### Editor Top (default)
+Show the content of the opening line at the first visible line of the editor.
+
+![](https://raw.githubusercontent.com/j0meinaster/bracket-peek/master/assets/top.png)
+
+Known Issues:
+- Pushes the content of the first visible lines away, which forces a horizontal scrollbar. This is intended and won't / can't be fixed.
+
+#### In Line
+Show the content of the opening line behind the closing bracket / tag.
+
+![](https://raw.githubusercontent.com/j0meinaster/bracket-peek/master/assets/inline.png)
+
+#### Hover
+Show the content of the opening line as a tooltip when hovering a closing bracket / tag. 
+Does not work when selecting code.
+
+![](https://raw.githubusercontent.com/j0meinaster/bracket-peek/master/assets/hover.png)
+
+### Preview Always (default: false)
+If true, always show the preview. Otherwise only show the preview, if the opening line is currently not visible.
+
+![](https://raw.githubusercontent.com/j0meinaster/bracket-peek/master/assets/always.png)
+
+### Preview Color (default: Theme default)
+CSS color attribute to change the preview text color. Does not work in combination with location 'Hover'.
+
+### Preview Italic
+Display the preview text in italic font style. Does not work in combination with location 'Hover'.
+
+### Preview Trigger
+Decide if the preview should be displayed on hover or when selecting code (cursor, range of text). 
 
 ## Known Issues
 
