@@ -1,5 +1,7 @@
 # Release Notes
 
+## [1.2.1]
+- fix ignored node modules
 ## [1.2.0]
 Customization Options
 - Preview in line
@@ -12,6 +14,7 @@ Customization Options
 
 Fixes 
 - Closing tag not always detected correctly
+
 ## [1.1.2]
 - Support code format, where open curly brackets are put on a new line => [Preview multiple lines? #4](https://github.com/j0meinaster/bracket-peek/issues/4)
 ## [1.1.1]
