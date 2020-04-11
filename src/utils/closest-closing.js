@@ -1,4 +1,5 @@
 const vscode = require('vscode');
+const { regexIndexOf, regexLastIndexOf } = require('./indexOf');
 
 module.exports = pos => {
   const activeEditor = vscode.window.activeTextEditor;
@@ -38,14 +39,4 @@ function editorHasTextAt(text, position) {
   const textEnd = Math.min(position.character + text.length, lineText.length);
 
   return lineText.substring(textStart, textEnd) == text;
-}
-
-function regexIndexOf(string, regex) {
-  var match = string.match(regex);
-  return match ? string.indexOf(match[0]) : -1;
-}
-
-function regexLastIndexOf(string, regex) {
-  var match = string.match(regex);
-  return match ? string.lastIndexOf(match[match.length - 1]) : -1;
 }

@@ -7,6 +7,7 @@ const findPairs = require('./find-pairs');
 const _triggerPreview = require('./preview/trigger');
 const { clearDecorations } = require('./preview/decorations');
 const findClosestClosingInLine = require('./utils/closest-closing');
+const { regexLastIndexOf } = require('./utils/indexOf');
 
 /**
  * @param {vscode.ExtensionContext} context

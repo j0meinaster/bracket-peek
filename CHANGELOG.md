@@ -1,5 +1,7 @@
 # Release Notes
 
+## [1.2.2]
+- fix preview on selection range
 ## [1.2.1]
 - fix ignored node modules
 ## [1.2.0]
