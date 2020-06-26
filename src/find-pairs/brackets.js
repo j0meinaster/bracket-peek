@@ -1,32 +1,25 @@
 const vscode = require('vscode');
 
-module.exports = () => {
+module.exports = (bracketType) => {
   let bracketPairs = [];
+
+  if (!bracketType) return bracketPairs;
 
   const activeEditor = vscode.window.activeTextEditor;
   const editorText = activeEditor.document.getText();
 
-  // Find each line with an opening bracket
-  const regExBracket = /.*{/gm;
+  // Find each line with an opening bracket => e.g. /.*{/gm
+  const regExBracket = new RegExp(`(.${bracketType.openingRegex}!)*${bracketType.openingRegex}`, 'g');
   let match;
   while (match = regExBracket.exec(editorText)) { // For each opening bracket
 
-    let openingLineText = match[0]; // '  function example() {'
-    const openingIndex = match.index + openingLineText.length - 1;
+    let openingText = match[0]; // '  function example() {'
+    const openingIndex = match.index + openingText.length - 1;
     let openingLineIndex = activeEditor.document.positionAt(openingIndex).line;
-
-
-    // If a code formatter is used to put opening bracket on a new line, show previous line as preview
-    // 
-    // 	function(x, y) // <= Expected preview
-    // 	{
-    if (openingLineText.trim() == '{' && openingLineIndex > 0) {
-      openingLineIndex = openingLineIndex - 1;
-      openingLineText = activeEditor.document.lineAt(openingLineIndex).text;
-    }
+    let openingLineText = activeEditor.document.lineAt(openingLineIndex).text;
 
     // Closing bracket line e.g.: '}'
-    const closingIndex = findClosingBracket(editorText, openingIndex);
+    const closingIndex = findClosingBracket(bracketType, editorText, openingIndex);
 
     if (!closingIndex) continue;
 
@@ -36,6 +29,16 @@ module.exports = () => {
 
     const closingLineIndex = closingPosition.line
     const closingOffset = closingPosition.character; // Offset in line
+
+
+    // If a code formatter is used to put opening bracket on a new line, show previous line as preview
+    // 
+    // 	function(x, y) // <= Expected preview
+    // 	{
+    if (openingLineText.trim() == bracketType.opening && openingLineIndex > 0) {
+      openingLineIndex = openingLineIndex - 1;
+      openingLineText = activeEditor.document.lineAt(openingLineIndex).text;;
+    }
 
     // Add pair
     bracketPairs.push({
@@ -49,10 +52,10 @@ module.exports = () => {
   return bracketPairs;
 };
 
-function findClosingBracket(editorText, index) {
+function findClosingBracket(bracketType, editorText, index) {
   // If index given is invalid and is  
   // not an opening bracket.  
-  if (editorText[index] !== '{') {
+  if (editorText[index] !== bracketType.opening) {
     return -1;
   }
 
@@ -61,9 +64,9 @@ function findClosingBracket(editorText, index) {
 
   // Traverse through string starting from given index.  
   for (; index < editorText.length; index++) {
-    if (editorText[index] === '{') { // If current character is an opening bracket => nested =>  increase depth.  
+    if (editorText[index] === bracketType.opening) { // If current character is an opening bracket => nested =>  increase depth.  
       depth++;
-    } else if (editorText[index] === '}') { // If current character is a closing  bracket => decrease depth
+    } else if (editorText[index] === bracketType.closing) { // If current character is a closing  bracket => decrease depth
       depth--;
       if (depth === 0) {  // If depth level is 0 all brackets are closed now we found the correct closing bracket
         return index;

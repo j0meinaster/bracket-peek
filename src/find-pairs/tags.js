@@ -6,12 +6,15 @@ module.exports = () => {
   const activeEditor = vscode.window.activeTextEditor;
   const editorText = activeEditor.document.getText();
 
-  const regExTag = /.*<[a-zA-Z0-9]* .*>?/gm;
+
+  // regex + tag open + any Letter or Number + (space + any char + tag close) or ( just tag close) 
+  // - matches if tag has or has not attributes
+  const regExTag = /<[a-zA-Z0-9]+( .*>|>)/g;
   while (match = regExTag.exec(editorText)) { // For each opening tag
 
-    const openingLineText = match[0]; // '   <div class="example" > 
-    const tag = (/<[a-zA-Z0-9]* /).exec(match[0])[0].trim(); // '<div'
-    const tagName = tag.substring(1, tag.length); // 'div'
+    const openingLineText = match[0]; // '<div class="example" >' or '<div>'
+    const tag = (/<[a-zA-Z0-9]+( |>)/).exec(match[0])[0]; // '<div ' or <div>
+    const tagName = tag.substring(1, tag.length - 1); // 'div'
     const openingIndex = match.index + openingLineText.lastIndexOf(tag);
     let openingLineIndex = activeEditor.document.positionAt(openingIndex + 1).line;
 
@@ -43,7 +46,8 @@ function findClosingTag(editorText, tagName, index) {
   tagName = tagName.trim(); // '</div'
 
   // Find initial and nested opening tags
-  const openingTagSearch = `<${tagName} `; // '</div '
+  const openingTag1Search = `<${tagName} `; // '</div '
+  const openingTag2Search = `<${tagName}>`; // '</div '
 
   // Different formats to find the beginning of the correct and nested closing tags
   const closingTag1Search = `</${tagName} `; // '</div '
@@ -55,7 +59,7 @@ function findClosingTag(editorText, tagName, index) {
   }
 
   // If index given is invalid and is not the opening tag.
-  if (!isTextAtIndex(openingTagSearch, index)) {
+  if (!isTextAtIndex(openingTag1Search, index) && !isTextAtIndex(openingTag2Search, index)) {
     return -1;
   }
 
@@ -67,9 +71,9 @@ function findClosingTag(editorText, tagName, index) {
     if (editorText[index] !== '<') { // No chance for open or close Tag => continue
       index++;
 
-    } else if (isTextAtIndex(openingTagSearch, index)) { // Check opening tag starts at index
+    } else if (isTextAtIndex(openingTag1Search, index) || isTextAtIndex(openingTag2Search, index)) { // Check opening tag starts at index
       depth++; // Add opening tag to stack (starts with initial tag)
-      index += openingTagSearch.length;
+      index += tagName.length + 2; //<tagname> => tag length + 2
 
     } else if (isTextAtIndex(closingTag1Search, index) || isTextAtIndex(closingTag2Search, index)) { // Check closing tag starts at index
       depth--; // Remove last opening tag from stack

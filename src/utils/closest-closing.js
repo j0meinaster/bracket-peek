@@ -1,5 +1,6 @@
 const vscode = require('vscode');
-const { regexIndexOf, regexLastIndexOf } = require('./indexOf');
+const { regexIndexOfClosing, regexLastIndexOfClosing } = require('./indexOf');
+const { getEnabledClosings } = require('../utils/closures');
 
 module.exports = pos => {
   const activeEditor = vscode.window.activeTextEditor;
@@ -7,10 +8,10 @@ module.exports = pos => {
   const posBefore = new vscode.Position(pos.line, Math.max(0, pos.character - 1));
 
   // Search bracket near carret first
-  if (editorHasTextAt('}', pos) || editorHasTextAt('</', pos)) { // Closing bracket / tag after carret
+  if (editorHasClosingAt(pos) || editorHasClosingAt(pos)) { // Closing bracket / tag after carret
     return pos;
 
-  } else if (editorHasTextAt('}', posBefore) || editorHasTextAt('</', posBefore)) { // Closing bracket / tag before carret
+  } else if (editorHasClosingAt(posBefore) || editorHasClosingAt(posBefore)) { // Closing bracket / tag before carret
     return posBefore;
 
   } else { // Search for next (preferred) or previous bracket in line
@@ -18,8 +19,8 @@ module.exports = pos => {
     const nextText = lineText.substring(pos.character);
     const previousText = lineText.substring(0, Math.max(pos.character, 0));
 
-    const nextIndex = regexIndexOf(nextText, /}|<\//gm); // First index of '}' or '</'
-    const previousIndex = regexLastIndexOf(previousText, /}|<\//gm); // Last index of '}' or '</'
+    const nextIndex = regexIndexOfClosing(nextText); // First index of closing e.g.: '</'
+    const previousIndex = regexLastIndexOfClosing(previousText); // Last index of closing e.g.: '}'
 
     if (nextIndex != -1) {
       return new vscode.Position(pos.line, pos.character + nextIndex);
@@ -30,13 +31,17 @@ module.exports = pos => {
   }
 }
 
-function editorHasTextAt(text, position) {
+function editorHasClosingAt(position) {
   const activeEditor = vscode.window.activeTextEditor;
   if (!activeEditor) return false;
 
   const lineText = activeEditor.document.lineAt(position.line).text;
   const textStart = position.character;
-  const textEnd = Math.min(position.character + text.length, lineText.length);
 
-  return lineText.substring(textStart, textEnd) == text;
+  const foundClosing = getEnabledClosings().find(closingText => {
+    const textEnd = Math.min(position.character + closingText.length, lineText.length);
+    return lineText.substring(textStart, textEnd) == closingText;
+  });
+
+  return !!foundClosing;
 }

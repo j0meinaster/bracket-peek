@@ -1,5 +1,7 @@
 # Release Notes
-
+## [1.3.0]
+- Support Parentheses () and square brackets []  => [feature request: please add support for [] and () #11](https://github.com/j0meinaster/bracket-peek/issues/11)
+- Fix: tags without attributes are not previewed
 ## [1.2.2]
 - fix preview on selection range
 ## [1.2.1]

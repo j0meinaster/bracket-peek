@@ -1,10 +1,14 @@
 
 # Bracket Peek
 
-This extensions helps you to view the line of code containing an opening curly bracket when inspecting the matching closing bracket.
+This extensions helps you to view the line of code containing an opening bracket when inspecting the matching closing bracket.
 If the line of code, containing the opening bracket, is not visible in the current view port, a preview is displayed in the first line of the editor.
 
-Now works with \<tags\> as well.
+Works with: 
+- Curly brackets { ... }  
+- Parentheses ( ... )  
+- Square brackets [ ... ]  
+- Tags \<tag>...<tag\>
 
 ## Features
 Works on:
@@ -15,7 +19,7 @@ Works on:
 ![](https://raw.githubusercontent.com/j0meinaster/bracket-peek/master/assets/preview.gif)
 
 
-Works with any programming language containing curly brackets '{ ... }'
+Works with any programming language containing brackets:
 - Javascript    *.js
 - Typescript    *.ts
 - Sass          *.scss
@@ -26,7 +30,7 @@ Works with any programming language containing curly brackets '{ ... }'
 - Php           *.php
 - C, C#, C++, Objective-C, Objective C++   *.c *cs *.cpp *.m* *.h
 
-Works with any markup based language containing tags'\<tag\>...\</tag\>'
+Works with any markup based language containing tags:
 - Html          *.html
 - Xml           *.xml
 
@@ -70,6 +74,12 @@ Display the preview text in italic font style. Does not work in combination with
 
 ### Preview Trigger
 Decide if the preview should be displayed on hover or when selecting code (cursor, range of text). 
+
+### Disable Different Brackets Types / Tags
+- Preview Curly Brackets { ... }
+- Preview Parentheses ( ... )
+- Preview Square Brackets [ ... ]
+- Preview Tags \<tag\>...\</tag\>
 
 ## Known Issues
 

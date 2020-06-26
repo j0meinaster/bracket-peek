@@ -17,20 +17,29 @@ const COLOR_LIGHT_THEME = 'rgba(0,0,0,.3)';
  * Only have one instance and apply config changes directly to it
  *
  * config : {
- *  previewAtTop        : boolean,
- *  previewInLine       : boolean,
- *  previewAsHover      : boolean,
- *  previewOnSelect     : boolean,
- *  previewOnHover      : boolean,
- *  previewAlways       : boolean,
- *  previewItalic       : boolean,
- *  previewLightColor   : string,
- *  previewDarkColor    : string,
+ *  previewParentheses        : boolean,
+ *  previewCurlyBrackets      : boolean,
+ *  previewSquareBrackets     : boolean,
+ *  previewTags               : boolean,
+ *  previewAtTop              : boolean,
+ *  previewInLine             : boolean,
+ *  previewAsHover            : boolean,
+ *  previewOnSelect           : boolean,
+ *  previewOnHover            : boolean,
+ *  previewAlways             : boolean,
+ *  previewItalic             : boolean,
+ *  previewLightColor         : string,
+ *  previewDarkColor          : string,
  * }
  */
 const config = {};
 
 function load() {
+
+  config.previewParentheses = vscode.workspace.getConfiguration('bracket-peek').previewParentheses;
+  config.previewCurlyBrackets = vscode.workspace.getConfiguration('bracket-peek').previewCurlyBrackets;
+  config.previewSquareBrackets = vscode.workspace.getConfiguration('bracket-peek').previewSquareBrackets;
+  config.previewTags = vscode.workspace.getConfiguration('bracket-peek').previewTags;
   
   // previewLocation
   const location = vscode.workspace.getConfiguration('bracket-peek').previewLocation;

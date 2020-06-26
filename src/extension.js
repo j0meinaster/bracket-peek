@@ -7,7 +7,7 @@ const findPairs = require('./find-pairs');
 const _triggerPreview = require('./preview/trigger');
 const { clearDecorations } = require('./preview/decorations');
 const findClosestClosingInLine = require('./utils/closest-closing');
-const { regexLastIndexOf } = require('./utils/indexOf');
+const { regexLastIndexOfClosing } = require('./utils/indexOf');
 
 /**
  * @param {vscode.ExtensionContext} context
@@ -55,7 +55,7 @@ function activate(context) {
 			for (let i = selectedLines.length - 1; i >= 0 && !selectedClosingPosition; i--){
 				const lineText = selectedLines[i];
 				
-				const closingIndex = regexLastIndexOf(lineText, /}|<\//gm); // First index of '}' or '</'
+				const closingIndex = regexLastIndexOfClosing(lineText); // First index of closing: e.g. '}'
 				if (closingIndex != -1) {
 					const closingLine = selection.start.line + i;
 					const closingCharacter = i == 0 ? selection.start.character + closingIndex : closingIndex;
@@ -121,7 +121,7 @@ function activate(context) {
 	function triggerFindPairs() {
 		clearTimeout(pairFindTimeout);
 		pairFindTimeout = setTimeout(() => {
-			pairs = findPairs()
+			pairs = findPairs();
 			triggerPreview();
 		}, 500);
 	}
