@@ -7,6 +7,9 @@
 	"contributors": [
 		"chrisant996"
 	],
+	"scripts": {
+		"publish": "vsce package && vsce publish"
+	},
 	"icon": "assets/logo.jpg",
 	"keywords": [
 		"bracket",
