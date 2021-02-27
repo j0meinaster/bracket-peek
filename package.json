@@ -39,8 +39,10 @@
 		"cpp",
 		"c plus plus",
 		"c sharp",
+		"ruby",
 		"html",
-		"xml"
+		"xml",
+		"react"
 	],
 	"engines": {
 		"vscode": "^1.40.0"
@@ -63,7 +65,8 @@
 		"onLanguage:objective-c",
 		"onLanguage:objective-cpp",
 		"onLanguage:html",
-		"onLanguage:xml"
+		"onLanguage:xml",
+		"onLanguage:ruby"
 	],
 	"main": "./src/extension.js",
 	"contributes": {

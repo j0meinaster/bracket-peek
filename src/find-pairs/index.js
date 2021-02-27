@@ -3,6 +3,7 @@ const log = require('../utils/log');
 const { CLOSURES, getEnabledClosures }= require('../utils/closures');
 const findBracketPairs = require('./brackets');
 const findTagPairs = require('./tags');
+const findRubyPairs = require('./ruby');
 
 module.exports = () => {
   let pairs = [];
@@ -34,6 +35,12 @@ module.exports = () => {
     log(`Found ${tagPairs.length}  tag pairs!`, tagPairs);
     pairs = pairs.concat(tagPairs);
   } 
+
+  if (activeEditor.document.languageId == 'ruby') {
+    let rubyPairs = findRubyPairs();
+    log(`Found ${rubyPairs.length}  ruby pairs!`, rubyPairs);
+    pairs = pairs.concat(rubyPairs);
+  }
 
   // Remove pairs where opening and closing line are the same => there will never be a preview for them
   pairs = pairs.filter(pair => {

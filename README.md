@@ -34,6 +34,9 @@ Works with any markup based language containing tags:
 - Html          *.html
 - Xml           *.xml
 
+Works with "bracket-less" block languages:
+- Ruby          *.rb
+
 Please note that the according language support extension needs to be installed as well.
 
 ## Customization

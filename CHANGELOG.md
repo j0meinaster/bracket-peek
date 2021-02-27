@@ -1,4 +1,6 @@
 # Release Notes
+## [1.4.0]
+- Support Ruby blocks => [Feature Request: Add support for ruby blocks #13](https://github.com/j0meinaster/bracket-peek/issues/13)
 ## [1.3.0]
 - Support Parentheses () and square brackets []  => [feature request: please add support for [] and () #11](https://github.com/j0meinaster/bracket-peek/issues/11)
 - Fix: tags without attributes are not previewed

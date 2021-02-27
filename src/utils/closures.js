@@ -7,6 +7,9 @@ const CLOSURES = {
   TAG: { opening: '<', closing: '</', openingRegex: '<', closingRegex: '<\/' }
 }
 
+const RUBY_OPENINGS = ['if', 'unless', 'elsif', 'else', 'case', 'while', 'until', 'for', 'def', 'class', 'begin', 'rescue', '(.* )do'];
+const RUBY_CLOSINGS = ['end', 'elsif', 'else', 'rescue'];
+
 function getEnabledClosures() {
   let closures = [];
   if (config.previewParentheses) closures.push(CLOSURES.PARENTHESES);
@@ -16,16 +19,25 @@ function getEnabledClosures() {
   return closures;
 }
 
-function getEnabledClosings() {
-  return getEnabledClosures().map(closure => closure.closing);
+function getEnabledClosings(activeEditor) {
+  let closings = getEnabledClosures().map(closure => closure.closing);
+  
+  if (activeEditor.document.languageId == 'ruby')
+    closings = closings.concat(RUBY_CLOSINGS);
+  
+  return closings;
 }
 
-function getEnabledClosingsRegex() {
+function getEnabledClosingsRegex(activeEditor) {
   
+  let closings = getEnabledClosures()
+    .map(closure => closure.closingRegex);
+  
+  if (activeEditor.document.languageId == 'ruby')
+    closings = closings.concat(RUBY_CLOSINGS);
+
   // \)|}|]|<\/
-  let regexString = getEnabledClosures()
-    .map(closure => closure.closingRegex)
-    .join('|');
+  let regexString = closings.join('|');
   
   return new RegExp(regexString, 'g');
 }
@@ -33,6 +45,8 @@ function getEnabledClosingsRegex() {
 
 module.exports = {
   CLOSURES,
+  RUBY_OPENINGS,
+  RUBY_CLOSINGS,
   getEnabledClosures,
   getEnabledClosings,
   getEnabledClosingsRegex

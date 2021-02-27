@@ -19,14 +19,18 @@ module.exports = pos => {
     const nextText = lineText.substring(pos.character);
     const previousText = lineText.substring(0, Math.max(pos.character, 0));
 
-    const nextIndex = regexIndexOfClosing(nextText); // First index of closing e.g.: '</'
-    const previousIndex = regexLastIndexOfClosing(previousText); // Last index of closing e.g.: '}'
+    const nextIndex = regexIndexOfClosing(nextText, activeEditor); // First index of closing e.g.: '</'
+    const previousIndex = regexLastIndexOfClosing(previousText, activeEditor); // Last index of closing e.g.: '}'
+    const inLineIndex = regexLastIndexOfClosing(lineText, activeEditor); // Search in whole line if text was split by carret
 
     if (nextIndex != -1) {
       return new vscode.Position(pos.line, pos.character + nextIndex);
 
     } else if (previousIndex != -1) {
       return new vscode.Position(pos.line, previousIndex);
+
+    } else if (inLineIndex != -1) {
+      return new vscode.Position(pos.line, inLineIndex);
     }
   }
 }
@@ -38,7 +42,7 @@ function editorHasClosingAt(position) {
   const lineText = activeEditor.document.lineAt(position.line).text;
   const textStart = position.character;
 
-  const foundClosing = getEnabledClosings().find(closingText => {
+  const foundClosing = getEnabledClosings(activeEditor).find(closingText => {
     const textEnd = Math.min(position.character + closingText.length, lineText.length);
     return lineText.substring(textStart, textEnd) == closingText;
   });
