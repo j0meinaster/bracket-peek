@@ -2,7 +2,7 @@
 	"name": "bracket-peek",
 	"displayName": "Bracket Peek",
 	"description": "Preview the opening line of code matching the inspected closing bracket",
-	"version": "1.3.0",
+	"version": "1.4.0",
 	"publisher": "jomeinaster",
 	"contributors": [
 		"chrisant996"
