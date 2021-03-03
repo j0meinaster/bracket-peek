@@ -85,3 +85,11 @@ paar.rechts      # => 2
 paar.links = 9   # => 9
 paar.links       # => 9
 paar.rechts = 8  # => Fehler: NoMethodError (undefined method `rechts=')
+
+# if @engine_state
+if @engine_state  
+    puts 'Engine is already Running'  
+else  
+    @engine_state = true  
+    puts 'Engine Idle'  
+end  

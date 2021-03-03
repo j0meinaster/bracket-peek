@@ -1,23 +1,24 @@
 const vscode = require('vscode');
-const { RUBY_OPENINGS, RUBY_CLOSINGS } = require('../utils/closures');
+const { RUBY_OPENINGS_REGEX, RUBY_CLOSINGS_REGEX } = require('../utils/closures');
 
 
-// ^( )*(if|unless|.+step)( .*)? =>
+// `(^|\r\n|\r|\n)( )*(if|unless|.+step)( |\r\n|\r|\n) =>
 // => 
-// ^ => line start
+// (^|\r\n|\r|\n) => line start or new line for any os
 // ( )* => any space indent
 // (if|unless|.+step) => match reserved words 
-// ( .*)?  => any leading space + word or nothing
+// ( |\r\n|\r|\n)  => any space or end of line (== new line)
 //
 // Only lines where the reserved opening is the first word are interpreted as block
 // so we can skip single line controls (where always word come beforehand), like: 
 //    "return true if arr.empty? && n == 0"  => no end  == no block
-const openingRegexPattern = `(^|\r\n|\r|\n)( )*(${RUBY_OPENINGS.join('|')})( |\r\n|\r|\n)`;
+// Only "do" is an exception of this rule.. "do" may have any words beforehand => see closures.js
+const openingRegexPattern = `(^|\r\n|\r|\n)( )*(${RUBY_OPENINGS_REGEX.join('|')})( |\r\n|\r|\n)`;
 
 // Closing
 // Same as opening, but leading words are allowed to match inline controls, like:
 // 'while x < 5 do x+=1 end'
-const closingRegexPattern = `(^|\r\n|\r|\n)(.* )?(${RUBY_CLOSINGS.join('|')})( |\r\n|\r|\n)`;
+const closingRegexPattern = `(^|\r\n|\r|\n)(.* )?(${RUBY_CLOSINGS_REGEX.join('|')})( |\r\n|\r|\n)`;
 
 module.exports = () => {
   let rubyPairs = [];
@@ -29,11 +30,11 @@ module.exports = () => {
   while (match = openingRegex.exec(editorText)) { // For each opening tag
 
     const openingLineText = match[0]; // '  def sum_eq_n?(arr, n)'
-    let openingWord = new RegExp(`( )*(${RUBY_OPENINGS.join('|')})( |\r\n|\r|\n)`).exec(match[0])[0]; // '  def'
+    let openingWord = new RegExp(`( )*(${RUBY_OPENINGS_REGEX.join('|')})( |\r\n|\r|\n)`).exec(match[0])[0]; // '  def'
     const openingEndIndex = match.index + openingWord.length;
     let openingLineIndex = activeEditor.document.positionAt(openingEndIndex).line;
 
-    // display whole line
+    // Always display whole line with opening
     const displayText = activeEditor.document.lineAt(openingLineIndex).text;
 
     // Closing tag line e.g.: 'end'
@@ -78,16 +79,18 @@ function findClosingIndex(editorText, index) {
     
     if (currOpeningMatch && currOpeningMatch.index < currClosingMatch.index) { // Found opening
       depth++; // Enter depth
-      currOpeningMatch = openingRegex.exec(searchText);
+      currOpeningMatch = openingRegex.exec(searchText); // Find next possible opening
     } else if (depth > 0) {
-      depth--; // go to next closing
-      currClosingMatch = closingRegex.exec(searchText);
+      depth--; // Exit depth 
+      currClosingMatch = closingRegex.exec(searchText); // Find next possible closing
     } else {
       closingMatch = currClosingMatch; // Found searched closing
     }
   }
 
-  const closingString = new RegExp(`(^| |\r\n|\r|\n)(${RUBY_CLOSINGS.join('|')})`).exec(closingMatch[0])[0]; // '  end'
+  const closingString = new RegExp(`(^| |\r\n|\r|\n)(${RUBY_CLOSINGS_REGEX.join('|')})`).exec(closingMatch[0])[0]; // '  end'
+  
+  // Calculate starting index (first letter) of closing
   const closingEndIndex = index + closingMatch.index + closingMatch[0].length - closingString.trim().length - 1;
 
   return closingEndIndex;

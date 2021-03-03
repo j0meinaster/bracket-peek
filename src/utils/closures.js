@@ -7,8 +7,8 @@ const CLOSURES = {
   TAG: { opening: '<', closing: '</', openingRegex: '<', closingRegex: '<\/' }
 }
 
-const RUBY_OPENINGS = ['if', 'unless', 'elsif', 'else', 'case', 'while', 'until', 'for', 'def', 'class', 'begin', 'rescue', '(.* )do'];
-const RUBY_CLOSINGS = ['end', 'elsif', 'else', 'rescue'];
+const RUBY_OPENINGS_REGEX = ['if', 'unless', 'elsif', 'else', 'case', 'while', 'until', 'for', 'def', 'class', 'begin', 'rescue', '(.* )do'];
+const RUBY_CLOSINGS = RUBY_CLOSINGS_REGEX = ['end', 'elsif', 'else', 'rescue'];
 
 function getEnabledClosures() {
   let closures = [];
@@ -34,7 +34,7 @@ function getEnabledClosingsRegex(activeEditor) {
     .map(closure => closure.closingRegex);
   
   if (activeEditor.document.languageId == 'ruby')
-    closings = closings.concat(RUBY_CLOSINGS);
+    closings = closings.concat(RUBY_CLOSINGS_REGEX);
 
   // \)|}|]|<\/
   let regexString = closings.join('|');
@@ -45,8 +45,8 @@ function getEnabledClosingsRegex(activeEditor) {
 
 module.exports = {
   CLOSURES,
-  RUBY_OPENINGS,
-  RUBY_CLOSINGS,
+  RUBY_OPENINGS_REGEX,
+  RUBY_CLOSINGS_REGEX,
   getEnabledClosures,
   getEnabledClosings,
   getEnabledClosingsRegex
