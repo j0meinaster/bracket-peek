@@ -7,7 +7,8 @@ const CLOSURES = {
   TAG: { opening: '<', closing: '</', openingRegex: '<', closingRegex: '<\/' }
 }
 
-const RUBY_OPENINGS_REGEX = ['if', 'unless', 'elsif', 'else', 'case', 'while', 'until', 'for', 'def', 'class', 'begin', 'rescue', '(.* )do'];
+// Special handling for do => allow word beforehand but not comments '#'
+const RUBY_OPENINGS_REGEX = ['if', 'unless', 'elsif', 'else', 'case', 'while', 'until', 'for', 'def', 'class', 'begin', 'rescue', '(.)*(?!#)*(.* )do'];
 const RUBY_CLOSINGS = RUBY_CLOSINGS_REGEX = ['end', 'elsif', 'else', 'rescue'];
 
 function getEnabledClosures() {
