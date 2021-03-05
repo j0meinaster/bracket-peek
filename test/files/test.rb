@@ -1,9 +1,14 @@
-    args.each do |arg|
-      define_method :"#{arg}=" do |new_value|              # define_method übergibt dem Block die übergeben Parameter
-        instance_variable_set("@#{arg}".to_sym, new_value) # \- setter-methoden enden mit einem =
-      end
-    end
-    
+loop do
+  i += 2
+  if i == 4
+    next        # skip rest of the code in this iteration
+  end
+  puts i
+  if i == 10
+    break
+  end
+end 
+
 # Add the strings before and after around each parm and print
 def surround(before, after, *items)
     items.each { |x| print before, x, after, "\n" }
@@ -65,6 +70,7 @@ class Object # Monkey-Patching aller Klassen
     args.each do |arg|
       define_method :"#{arg}=" do |new_value|              # define_method übergibt dem Block die übergeben Parameter
         instance_variable_set("@#{arg}".to_sym, new_value) # \- setter-methoden enden mit einem =
+      # end 
       end
     end
   end
@@ -94,9 +100,9 @@ else
     puts 'Engine Idle'  
 end  
 
-# loop do
 
 loop do
+  # loop do
   i += 2
   if i == 4
     next        # skip rest of the code in this iteration
@@ -106,3 +112,11 @@ loop do
     break
   end
 end 
+
+
+module Cream
+  def cream?
+    true
+  end
+end
+

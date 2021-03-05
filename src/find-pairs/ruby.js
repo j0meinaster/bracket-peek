@@ -29,9 +29,8 @@ module.exports = () => {
   const openingRegex = new RegExp(openingRegexPattern, 'gm');
   while (match = openingRegex.exec(editorText)) { // For each opening tag
 
-    const openingLineText = match[0]; // '  def sum_eq_n?(arr, n)'
-    let openingWord = new RegExp(`( )*(${RUBY_OPENINGS_REGEX.join('|')})( |\r\n|\r|\n)`).exec(match[0])[0]; // '  def'
-    const openingEndIndex = match.index + openingWord.length;
+    let openingWord = new RegExp(`( )*(${RUBY_OPENINGS_REGEX.join('|')})( |\r\n|\r|\n)`).exec(match[0])[0]; // '  def '
+    const openingEndIndex = match.index + openingWord.trimEnd().length;
     let openingLineIndex = activeEditor.document.positionAt(openingEndIndex).line;
 
     // Always display whole line with opening
