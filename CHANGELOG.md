@@ -1,4 +1,6 @@
 # Release Notes
+## [1.4.2]
+- Fix ruby bugs: add module and ignore comments with # => [Feature Request: Add support for ruby blocks #13](https://github.com/j0meinaster/bracket-peek/issues/13)
 ## [1.4.0]
 - Support Ruby blocks => [Feature Request: Add support for ruby blocks #13](https://github.com/j0meinaster/bracket-peek/issues/13)
 ## [1.3.0]
