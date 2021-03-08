@@ -7,8 +7,9 @@ const CLOSURES = {
   TAG: { opening: '<', closing: '</', openingRegex: '<', closingRegex: '<\/' }
 }
 
-// Special handling for do => allow word beforehand but not comments '#'
-const RUBY_OPENINGS_REGEX = ['if', 'unless', 'elsif', 'else', 'case', 'while', 'until', 'for', 'def', 'class', 'module', 'begin', 'rescue', '(.)*(?!#)*(.* )do'];
+// Special handling for do => allow word beforehand but not comments 
+//  [^#\r\n] negative look ahead to ignore comments, e.g "# Comment" or to early new lines
+const RUBY_OPENINGS_REGEX = ['if', 'unless', 'elsif', 'else', 'case', 'while', 'until', 'for', 'def', 'class', 'module', 'begin', 'rescue', '([^#\r\n]* )do'];
 const RUBY_CLOSINGS = RUBY_CLOSINGS_REGEX = ['end', 'elsif', 'else', 'rescue'];
 
 function getEnabledClosures() {

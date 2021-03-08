@@ -102,7 +102,8 @@ end
 
 
 loop do
-  # loop do
+# loop do 
+# loop do end
   i += 2
   if i == 4
     next        # skip rest of the code in this iteration

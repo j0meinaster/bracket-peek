@@ -17,8 +17,10 @@ const openingRegexPattern = `(^|\r\n|\r|\n)( )*(${RUBY_OPENINGS_REGEX.join('|')}
 
 // Closing
 // Same as opening, but leading words are allowed to match inline controls, like:
+// [^#\r\n] negative look ahead to ignore comments, e.g "# Comment" or to early new lines
 // 'while x < 5 do x+=1 end'
-const closingRegexPattern = `(^|\r\n|\r|\n)(.* )?(${RUBY_CLOSINGS_REGEX.join('|')})( |\r\n|\r|\n)`;
+const closingRegexPattern = `(^|\r\n|\r|\n)([^#\r\n]* )?(${RUBY_CLOSINGS_REGEX.join('|')})( |\r\n|\r|\n)`;
+// const closingRegexPattern = `(^|\r\n|\r|\n)(.* )?(${RUBY_CLOSINGS_REGEX.join('|')})( |\r\n|\r|\n)`;
 
 module.exports = () => {
   let rubyPairs = [];
