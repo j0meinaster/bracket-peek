@@ -2,7 +2,7 @@
 	"name": "bracket-peek",
 	"displayName": "Bracket Peek",
 	"description": "Preview the opening line of code matching the inspected closing bracket",
-	"version": "1.4.2",
+	"version": "1.4.3",
 	"publisher": "jomeinaster",
 	"contributors": [
 		"chrisant996"
@@ -66,7 +66,8 @@
 		"onLanguage:objective-cpp",
 		"onLanguage:html",
 		"onLanguage:xml",
-		"onLanguage:ruby"
+		"onLanguage:ruby",
+		"onLanguage:go"
 	],
 	"main": "./src/extension.js",
 	"contributes": {

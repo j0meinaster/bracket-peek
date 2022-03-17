@@ -29,6 +29,7 @@ Works with any programming language containing brackets:
 - Java          *.java
 - Php           *.php
 - C, C#, C++, Objective-C, Objective C++   *.c *cs *.cpp *.m* *.h
+- Golang        *.go
 
 Works with any markup based language containing tags:
 - Html          *.html
