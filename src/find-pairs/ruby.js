@@ -26,6 +26,7 @@ module.exports = () => {
   let rubyPairs = [];
 
   const activeEditor = vscode.window.activeTextEditor;
+  if (!activeEditor.document) return rubyPairs;
   const editorText = activeEditor.document.getText();
 
   const openingRegex = new RegExp(openingRegexPattern, 'gm');

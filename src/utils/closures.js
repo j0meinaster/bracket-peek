@@ -24,7 +24,7 @@ function getEnabledClosures() {
 function getEnabledClosings(activeEditor) {
   let closings = getEnabledClosures().map(closure => closure.closing);
   
-  if (activeEditor.document.languageId == 'ruby')
+  if (activeEditor.document && activeEditor.document.languageId == 'ruby')
     closings = closings.concat(RUBY_CLOSINGS);
   
   return closings;
@@ -35,7 +35,7 @@ function getEnabledClosingsRegex(activeEditor) {
   let closings = getEnabledClosures()
     .map(closure => closure.closingRegex);
   
-  if (activeEditor.document.languageId == 'ruby')
+  if (activeEditor.document && activeEditor.document.languageId == 'ruby')
     closings = closings.concat(RUBY_CLOSINGS_REGEX);
 
   // \)|}|]|<\/

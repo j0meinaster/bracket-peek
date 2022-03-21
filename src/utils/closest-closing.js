@@ -37,7 +37,7 @@ module.exports = pos => {
 
 function editorHasClosingAt(position) {
   const activeEditor = vscode.window.activeTextEditor;
-  if (!activeEditor) return false;
+  if (!activeEditor || !activeEditor.document) return false;
 
   const lineText = activeEditor.document.lineAt(position.line).text;
   const textStart = position.character;

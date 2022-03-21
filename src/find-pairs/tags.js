@@ -4,8 +4,8 @@ module.exports = () => {
   let tagPairs = [];
 
   const activeEditor = vscode.window.activeTextEditor;
+  if (!activeEditor.document) return tagPairs;
   const editorText = activeEditor.document.getText();
-
 
   // regex + tag open + any Letter or Number + (space + any char + tag close) or ( just tag close) 
   // - matches if tag has or has not attributes

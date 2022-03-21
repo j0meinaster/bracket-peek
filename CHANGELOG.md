@@ -1,7 +1,7 @@
 # Release Notes
 ## [1.4.3]
-### Added
 - Support *.go
+- Fixed [Cannot read property 'document' of undefined #15](https://github.com/j0meinaster/bracket-peek/issues/15)
 ## [1.4.2]
 - Fix ruby bugs: add module and ignore comments with # => [Feature Request: Add support for ruby blocks #13](https://github.com/j0meinaster/bracket-peek/issues/13)
 ## [1.4.0]

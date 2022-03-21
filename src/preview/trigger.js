@@ -9,7 +9,7 @@ const createPreviewAsHover = require('./hover');
 module.exports = (pairs, hoveredClosingPosition, selectedClosingPosition) => {
 
   const activeEditor = vscode.window.activeTextEditor;
-  if (!activeEditor) return;
+  if (!activeEditor || !activeEditor.document) return;
 
   // Decide if hovered closing bracket/tag or selected closing bracket/tag preview 
   let closingPosition = hoveredClosingPosition; // Hover is more important then current selection

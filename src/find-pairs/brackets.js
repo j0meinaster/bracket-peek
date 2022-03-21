@@ -3,7 +3,7 @@ const vscode = require('vscode');
 module.exports = (bracketType) => {
   let bracketPairs = [];
 
-  if (!bracketType) return bracketPairs;
+  if (!bracketType || !activeEditor.document) return bracketPairs;
 
   const activeEditor = vscode.window.activeTextEditor;
   const editorText = activeEditor.document.getText();

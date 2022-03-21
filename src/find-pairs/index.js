@@ -10,7 +10,7 @@ module.exports = () => {
 
   const activeEditor = vscode.window.activeTextEditor;
 
-  if (!activeEditor) return pairs;
+  if (!activeEditor || !activeEditor.document) return pairs;
 
   if (getEnabledClosures().includes(CLOSURES.PARENTHESES)) {
     let parenthesesPairs = findBracketPairs(CLOSURES.PARENTHESES);
@@ -36,7 +36,7 @@ module.exports = () => {
     pairs = pairs.concat(tagPairs);
   } 
 
-  if (activeEditor.document.languageId == 'ruby') {
+  if (activeEditor.document && activeEditor.document.languageId == 'ruby') {
     let rubyPairs = findRubyPairs();
     log(`Found ${rubyPairs.length}  ruby pairs!`, rubyPairs);
     pairs = pairs.concat(rubyPairs);
