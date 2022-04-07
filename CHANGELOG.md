@@ -1,4 +1,7 @@
 # Release Notes
+## [1.4.4]
+- Fixed [TypeError: Cannot read property 'document' of undefined](https://github.com/j0meinaster/bracket-peek/issues/15)
+- Fixed [Cannot access 'activeEditor' before initialization](https://github.com/j0meinaster/bracket-peek/issues/22)
 ## [1.4.3]
 - Support *.go
 - Fixed [Cannot read property 'document' of undefined #15](https://github.com/j0meinaster/bracket-peek/issues/15)

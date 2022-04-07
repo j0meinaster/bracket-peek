@@ -55,7 +55,7 @@ function activate(context) {
 			for (let i = selectedLines.length - 1; i >= 0 && !selectedClosingPosition; i--){
 				const lineText = selectedLines[i];
 				
-				const closingIndex = regexLastIndexOfClosing(lineText); // First index of closing: e.g. '}'
+				const closingIndex = regexLastIndexOfClosing(lineText, activeEditor); // First index of closing: e.g. '}'
 				if (closingIndex != -1) {
 					const closingLine = selection.start.line + i;
 					const closingCharacter = i == 0 ? selection.start.character + closingIndex : closingIndex;

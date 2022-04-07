@@ -5,6 +5,8 @@ const { getEnabledClosings } = require('../utils/closures');
 module.exports = pos => {
   const activeEditor = vscode.window.activeTextEditor;
 
+  if (!activeEditor || !activeEditor.document) return;
+
   const posBefore = new vscode.Position(pos.line, Math.max(0, pos.character - 1));
 
   // Search bracket near carret first

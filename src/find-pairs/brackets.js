@@ -3,9 +3,11 @@ const vscode = require('vscode');
 module.exports = (bracketType) => {
   let bracketPairs = [];
 
-  if (!bracketType || !activeEditor.document) return bracketPairs;
-
+  
   const activeEditor = vscode.window.activeTextEditor;
+
+  if (!bracketType || !activeEditor.document) return bracketPairs;
+  
   const editorText = activeEditor.document.getText();
 
   // Find each line with an opening bracket => e.g. /.*{/gm
